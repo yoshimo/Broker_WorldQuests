@@ -60,19 +60,21 @@ local FACTION_ALLIANCE = 1
 local FACTION_HORDE = 2
 local MAP_ZONES = {
 	["BFA"] = {
-		[863] = { id = 863, name = GetMapInfo(863).name, faction = FACTION_HORDE, quests = {}, buttons = {}, },  -- Nazmir
-		[864] = { id = 864, name = GetMapInfo(864).name, faction = FACTION_HORDE, quests = {}, buttons = {}, },  -- Vol'dun
-		[862] = { id = 862, name = GetMapInfo(862).name, faction = FACTION_HORDE, quests = {}, buttons = {}, },  -- Zuldazar
-		[895] = { id = 895, name = GetMapInfo(895).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Tiragarde
-		[942] = { id = 942, name = GetMapInfo(942).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Stormsong Valley
-		[896] = { id = 896, name = GetMapInfo(896).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Drustvar
-		[1161] = { id = 1161, name = GetMapInfo(1161).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Boralus
-		[1355] = { id = 1355, name = GetMapInfo(1355).name, quests = {}, buttons = {}, },  -- Nazjatar 8.2
-		[1462] = { id = 1462, name = GetMapInfo(1462).name, quests = {}, buttons = {}, },  -- Mechagon 8.2
+		--[863] = { id = 863, name = GetMapInfo(863).name, faction = FACTION_HORDE, quests = {}, buttons = {}, },  -- Nazmir
+		--[864] = { id = 864, name = GetMapInfo(864).name, faction = FACTION_HORDE, quests = {}, buttons = {}, },  -- Vol'dun
+		--[862] = { id = 862, name = GetMapInfo(862).name, faction = FACTION_HORDE, quests = {}, buttons = {}, },  -- Zuldazar
+		--[895] = { id = 895, name = GetMapInfo(895).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Tiragarde
+		--[942] = { id = 942, name = GetMapInfo(942).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Stormsong Valley
+		--[896] = { id = 896, name = GetMapInfo(896).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Drustvar
+		--[1161] = { id = 1161, name = GetMapInfo(1161).name, faction = FACTION_ALLIANCE, quests = {}, buttons = {}, },  -- Boralus
+		--[1355] = { id = 1355, name = GetMapInfo(1355).name, quests = {}, buttons = {}, },  -- Nazjatar 8.2
+		--[1462] = { id = 1462, name = GetMapInfo(1462).name, quests = {}, buttons = {}, },  -- Mechagon 8.2
+		--[1527] = { id = 1527, name = GetMapInfo(1527).name, quests = {}, buttons = {}, },  -- Uldum 8.3
+		--[1530] = { id = 1530, name = GetMapInfo(1530).name, quests = {}, buttons = {}, },  -- Valley of Eternal Blossoms 8.3
 		 [14] = { id = 14, name = GetMapInfo(14).name,  quests = {}, buttons = {}, },  -- Arathi
 		 [62] = { id = 62, name = GetMapInfo(62).name,  quests = {}, buttons = {}, },  -- Darkshore
 			-- TODO: HACK: Shadowlands needs own category
-		[1525] = { id = 1525, name = GetMapInfo(1525).name, quests = {}, buttons = {}, }, --Revendreth 9.0
+		[1525] = { id = 1525, name = GetMapInfo(1525).name, quests = {}, buttons = {}, }, -- Revendreth 9.0
 		[1533] = { id = 1533, name = GetMapInfo(1533).name, quests = {}, buttons = {}, }, -- Bastion 9.0
 		[1536] = { id = 1536, name = GetMapInfo(1536).name, quests = {}, buttons = {}, }, -- Maldraxxus 9.0
 		[1565] = { id = 1565, name = GetMapInfo(1565).name, quests = {}, buttons = {}, }, -- Ardenwald 9.0
@@ -92,7 +94,7 @@ local MAP_ZONES = {
 		[885] = { id = 885, name = GetMapInfo(885).name, quests = {}, buttons = {}, },  -- Antoran Wastes
 	},
 	["SHADOWLANDS"] = {
-		[1525] = { id = 1525, name = GetMapInfo(1525).name, quests = {}, buttons = {}, }, --Revendreth 9.0
+		[1525] = { id = 1525, name = GetMapInfo(1525).name, quests = {}, buttons = {}, }, -- Revendreth 9.0
 		[1533] = { id = 1533, name = GetMapInfo(1533).name, quests = {}, buttons = {}, }, -- Bastion 9.0
 		[1536] = { id = 1536, name = GetMapInfo(1536).name, quests = {}, buttons = {}, }, -- Maldraxxus 9.0
 		[1565] = { id = 1565, name = GetMapInfo(1565).name, quests = {}, buttons = {}, }, -- Ardenwald 9.0
@@ -100,7 +102,8 @@ local MAP_ZONES = {
 }
 local MAP_ZONES_SORT = {
 	["BFA"] = {
-		1355, 1462, 62, 14, 863, 864, 862, 895, 942, 896, 1161
+			--	1530, 1527, 1355, 1462, 62, 14, 863, 864, 862, 895, 942, 896, 1161
+			1525, 1533, 1536, 1565
 	},
 	["LEGION"] = {
 		630, 790, 641, 650, 634, 680, 627, 646, 830, 882, 885
@@ -153,6 +156,13 @@ local BFA_REPUTATION_CURRENCY_IDS = {
 	[1593] = true,
 	[1594] = true,
 	[1592] = true,
+}
+
+local SHADOWLANDS_REPUTATION_CURRENCY_IDS = {
+	[1804] = true, -- The Ascended
+	[1805] = true, -- Undying Army
+	[1806] = true, -- Wild Hunt
+	[1807] = true, -- Court of Harvesters
 }
 
 local FAMILY_FAMILIAR_QUEST_IDS = { -- WQ pet battle achievement
@@ -616,7 +626,8 @@ end
 local currentTomTomWaypoint
 local Row_OnClick = function(row)
 	if IsShiftKeyDown() then
-		if IsWorldQuestHardWatched(row.quest.questId) or (IsWorldQuestWatched(row.quest.questId) and GetSuperTrackedQuestID() == row.quest.questId) then
+		--if IsWorldQuestHardWatched(row.quest.questId) or (IsWorldQuestWatched(row.quest.questId) and GetSuperTrackedQuestID() == row.quest.questId) then
+		if (IsWorldQuestWatched(row.quest.questId) and C_SuperTrack.GetSuperTrackedQuestID() == row.quest.questId) then
 			BonusObjectiveTracker_UntrackWorldQuest(row.quest.questId)
 		else
 			BonusObjectiveTracker_TrackWorldQuest(row.quest.questId, true)
@@ -664,7 +675,7 @@ local RetrieveWorldQuests = function(mapId)
 		numQuests = 0
 		MAP_ZONES[expansion][mapId].questsSort = {}
 
-		local timeLeft, tagId, tagName, worldQuestType, isRare, isElite, title, factionId
+		local bla, timeLeft, tagId, tagName, worldQuestType, isRare, isElite, title, factionId
 		for i = 1, #questList do
 			if questList[i].mapID == mapId then 
 				--[[
@@ -691,15 +702,21 @@ local RetrieveWorldQuests = function(mapId)
 
 				timeLeft = GetQuestTimeLeftMinutes(questList[i].questId) or 0
 
-				tagId, tagName, worldQuestType, isRare, isElite, tradeskillLineIndex = GetQuestTagInfo(questList[i].questId)
+				--tagId, tagName, worldQuestType, isRare, isElite, tradeskillLineIndex = GetQuestTagInfo(questList[i].questId)
+			--	print("questID: ",questList[i].questId)
+				bla = C_QuestLog.GetQuestTagInfo(questList[i].questId)
+				if bla ~= nil then
+					tagId = bla.tagID
+					tagName = bla.tagName
+					worldQuestType = bla.worldQuestType
+					isRare = bla.quality
+					isElite = bla.isElite
+				--print("NOTNIL:", questList[i].questId, tagId, tagName, worldQuestType, isRare, isElite)
+				else
+				--print("QuestNotCached: QuestId: ",questList[i].questId, mapId, C_Map.GetMapInfo(mapId).name, C_TaskQuest.GetQuestInfoByQuestID(questList[i].questId))
+				end
 
-				--tagId = C_QuestLog.GetQuestTagInfo(questList[i].questId).tagID
-				--tagName = C_QuestLog.GetQuestTagInfo(questList[i].questId).tagName
-				--worldQuestType = C_QuestLog.GetQuestTagInfo(questList[i].questId).worldQuestType
-				--isRare = C_QuestLog.GetQuestTagInfo(questList[i].questId).quality
-				--isElite = C_QuestLog.GetQuestTagInfo(questList[i].questId).isElite
-
--- print(tagId, tagName, worldQuestType, isRare, isElite, i)
+				--print(tagId, tagName, worldQuestType, isRare, isElite, i)
 
 				if worldQuestType ~= nil then
 
@@ -828,6 +845,9 @@ local RetrieveWorldQuests = function(mapId)
 								quest.reward.azeriteAmount = currency.amount -- todo: improve broker text values?
 								if C("showArtifactPower") then quest.hide = false end
 							elseif BFA_REPUTATION_CURRENCY_IDS[currencyId] then
+								currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
+								if C("showBFAReputation") then quest.hide = false end
+							elseif SHADOWLANDS_REPUTATION_CURRENCY_IDS[currencyId] then
 								currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
 								if C("showBFAReputation") then quest.hide = false end
 							elseif currencyId == 1560 then -- war resources
@@ -1711,7 +1731,8 @@ function BWQ:UpdateBlock()
 			--local titleWidth = button.titleFS:GetStringWidth()
 			--if titleWidth > titleMaxWidth then titleMaxWidth = titleWidth end
 
-			if IsWorldQuestHardWatched(button.quest.questId) or GetSuperTrackedQuestID() == button.quest.questId then
+			--if IsWorldQuestHardWatched(button.quest.questId) or GetSuperTrackedQuestID() == button.quest.questId then
+			if C_SuperTrack.GetSuperTrackedQuestID() == button.quest.questId then
 				button.track:Show()
 			else
 				button.track:Hide()
@@ -1944,6 +1965,12 @@ function BWQ:SetupConfigMenu()
 				{ text = "Argussian Reach", check="alwaysShowArgussianReach" },
 			}
 		},
+		{ text = "       BLABLATEST", submenu = {
+				{ text = "Rustbolt Resistance", check="alwaysShowRustboltResistance" },		
+				{ text = "Tortollan Seekers", check="alwaysShowTortollanSeekers" },
+				{ text = "Champions of Azeroth", check="alwaysShowChampionsOfAzeroth" },
+			}
+		},
 	}
 	if TomTom then
 		table.insert(options, { text = "" })
@@ -2042,7 +2069,8 @@ end
 
 local SetFlightMapPins = function(self)
 	for pin, active in self:GetMap():EnumeratePinsByTemplate("WorldQuestPinTemplate") do
-		if IsWorldQuestHardWatched(pin.questID) or GetSuperTrackedQuestID() == pin.questID then
+		--if IsWorldQuestHardWatched(pin.questID) or GetSuperTrackedQuestID() == pin.questID then
+		if C_SuperTrack.GetSuperTrackedQuestID() == pin.questID then
 			pin:SetAlphaLimits(nil, 0.0, 1.0)
 			pin:SetAlpha(1)
 			pin:Show()
