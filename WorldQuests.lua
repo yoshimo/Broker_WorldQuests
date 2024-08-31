@@ -709,9 +709,9 @@ local currentTomTomWaypoint
 local Row_OnClick = function(row)
 	if IsShiftKeyDown() then
 		if (GetQuestWatchType(row.quest.questId) == Enum.QuestWatchType.Manual or GetSuperTrackedQuestID() == row.quest.questId) then
-			BonusObjectiveTracker_UntrackWorldQuest(row.quest.questId)
+			C_QuestLog.RemoveWorldQuestWatch(row.quest.questId)
 		else
-			BonusObjectiveTracker_TrackWorldQuest(row.quest.questId, Enum.QuestWatchType.Manual)
+			C_QuestLog.AddWorldQuestWatch(row.quest.questId, Enum.QuestWatchType.Manual)
 		end
 	else
 		if not WorldMapFrame:IsShown() then ShowUIPanel(WorldMapFrame) end
