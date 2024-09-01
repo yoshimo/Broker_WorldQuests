@@ -1,3 +1,6 @@
+### 11.0.2.11
+* Fixed shift-clicking rows to set quest tracker
+
 ### 11.0.2.10
 * Added support for Council of Dornogal currency
 
