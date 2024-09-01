@@ -1,3 +1,6 @@
+### 11.0.2.10
+* Added support for Council of Dornogal currency
+
 ### 11.0.2.9
 * Fixed currencies being incorrect or showing as zero.
 * Increased the max width of the BWQ window.

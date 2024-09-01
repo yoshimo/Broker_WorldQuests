@@ -165,6 +165,7 @@ local defaultConfig = {
 		brokerShowTheAssemblyoftheDeeps = true,
 		brokerShowValorstones = true,
 		brokerShowKej = true,
+		brokerShowCouncilofDornogal = true,
 		brokerShowHallowfallArathi = true,
 		brokerShowBloodyTokens = true,
 		brokerShowPolishedPetCharms = false,
@@ -187,6 +188,7 @@ local defaultConfig = {
 	showHallowfallArathi = true,
 	showValorstones = true,
 	showKej = true,
+	showCouncilofDornogal = true,
 	showBloodyTokens = true,
 	showArtifactPower = true,
 	showPrismaticManapearl = true,
@@ -1020,6 +1022,10 @@ local RetrieveWorldQuests = function(mapId)
 									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.KEJ
 									quest.reward.KejAmount = currency.amount
 									if C("showKej") then quest.hide = false end
+								elseif currencyId == 2897 then -- Council of Dornogal
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL
+									quest.reward.CouncilofDornogalAmount = currency.amount
+									if C("showCouncilofDornogal") then quest.hide = false end
 								else 
 									if WQB_DEBUG then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
@@ -1152,7 +1158,9 @@ local RetrieveWorldQuests = function(mapId)
 
 						if rewardType then
 							for _, rtype in next, rewardType do
-								if rtype == CONSTANTS.REWARD_TYPES.ARTIFACTPOWER and quest.reward.azeriteAmount then
+								if rtype == CONSTANTS.REWARD_TYPES.POLISHED_PET_CHARM then
+									BWQ.totalPolishedPetCharms = BWQ.totalPolishedPetCharms + quest.reward.polishedPetCharmsAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.ARTIFACTPOWER and quest.reward.azeriteAmount then
 									BWQ.totalArtifactPower = BWQ.totalArtifactPower + (quest.reward.azeriteAmount or 0)
 								elseif rtype == CONSTANTS.REWARD_TYPES.WAKENING_ESSENCE and quest.reward.wakeningEssencesAmount then
 									BWQ.totalWakeningEssences = BWQ.totalWakeningEssences + quest.reward.wakeningEssencesAmount
@@ -1216,8 +1224,8 @@ local RetrieveWorldQuests = function(mapId)
 									BWQ.totalValorstones = BWQ.totalValorstones + quest.reward.ValorstonesAmount
 								elseif rtype == CONSTANTS.REWARD_TYPES.KEJ then
 									BWQ.totalKej = BWQ.totalKej + quest.reward.KejAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.POLISHED_PET_CHARM then
-									BWQ.totalPolishedPetCharms = BWQ.totalPolishedPetCharms + quest.reward.polishedPetCharmsAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL then
+									BWQ.totalCouncilofDornogal = BWQ.totalCouncilofDornogal + quest.reward.CouncilofDornogalAmount
 								end
 							end
 						end
@@ -1551,7 +1559,7 @@ end
 local originalMap, originalContinent, originalDungeonLevel
 function BWQ:UpdateQuestData()
 	questIds = BWQcache.questIds or {}
-	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies, BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras, BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering, BWQ.totalBloodyTokens, BWQ.totalDragonIslesSupplies, BWQ.totalElementalOverflow, BWQ.totalFlightstones, BWQ.totalWhelplingsDreamingCrest, BWQ.totalDrakesDreamingCrest, BWQ.totalWyrmsDreamingCrest, BWQ.totalAspectsDreamingCrest, BWQ.totalWhelplingsAwakenedCrest, BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment, BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej, BWQ.totalPolishedPetCharms = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies, BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras, BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering, BWQ.totalBloodyTokens, BWQ.totalDragonIslesSupplies, BWQ.totalElementalOverflow, BWQ.totalFlightstones, BWQ.totalWhelplingsDreamingCrest, BWQ.totalDrakesDreamingCrest, BWQ.totalWyrmsDreamingCrest, BWQ.totalAspectsDreamingCrest, BWQ.totalWhelplingsAwakenedCrest, BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment, BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej, BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 	for mapId in next, MAP_ZONES[expansion] do
 		RetrieveWorldQuests(mapId)
@@ -2070,6 +2078,7 @@ function BWQ:UpdateBlock()
 
 	if C("showTotalsInBrokerText") then
 		local brokerString = ""
+		if C("brokerShowPolishedPetCharms")    	and BWQ.totalPolishedPetCharms > 0  	then brokerString = string.format("%s|TInterface\\Icons\\inv_currency_petbattle:16:16|t %d  ", brokerString, BWQ.totalPolishedPetCharms) end
 		if C("brokerShowAP")                  	and BWQ.totalArtifactPower > 0      	then brokerString = string.format("%s|TInterface\\Icons\\inv_smallazeriteshard:16:16|t %s  ", brokerString, AbbreviateNumber(BWQ.totalArtifactPower)) end
 		if C("brokerShowServiceMedals")       	and BWQ.totalServiceMedals > 0      	then brokerString = string.format("%s|T%s:16:16|t %s  ", brokerString, isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal", BWQ.totalServiceMedals) end
 		if C("brokerShowWakeningEssences")    	and BWQ.totalWakeningEssences > 0   	then brokerString = string.format("%s|TInterface\\Icons\\achievement_dungeon_ulduar80_25man:16:16|t %s  ", brokerString, BWQ.totalWakeningEssences) end
@@ -2106,7 +2115,7 @@ function BWQ:UpdateBlock()
 		if C("brokerShowHallowfallArathi") 		and BWQ.totalHallowfallArathi > 0		then brokerString = string.format("%s|TInterface\\Icons\\ui_majorfactions_flame:16:16|t %d  ", brokerString, BWQ.totalHallowfallArathi) end
 		if C("brokerShowValorstones") 			and BWQ.totalValorstones > 0			then brokerString = string.format("%s|TInterface\\Icons\\inv_valorstone_base:16:16|t %d  ", brokerString, BWQ.totalValorstones) end
 		if C("brokerShowKej") 					and BWQ.totalKej > 0					then brokerString = string.format("%s|TInterface\\Icons\\inv_10_tailoring_silkrare_color3:16:16|t %d  ", brokerString, BWQ.totalKej) end
-		if C("brokerShowPolishedPetCharms")    	and BWQ.totalPolishedPetCharms > 0  	then brokerString = string.format("%s|TInterface\\Icons\\inv_currency_petbattle:16:16|t %d  ", brokerString, BWQ.totalPolishedPetCharms) end
+		if C("brokerShowCouncilofDornogal") 	and BWQ.totalCouncilofDornogal > 0		then brokerString = string.format("%s|TInterface\\Icons\\ui_majorfactions_storm:16:16|t %d  ", brokerString, BWQ.totalCouncilofDornogal) end
 
 		if brokerString and brokerString ~= "" then
 			BWQ.WorldQuestsBroker.text = brokerString
@@ -2133,6 +2142,7 @@ function BWQ:SetupConfigMenu()
 		{ text = "Only show world quests with |cff0070ddrare|r or above quality", check = "onlyShowRareOrAbove" },
 		{ text = "Don't filter quests for active bounties", check = "alwaysShowBountyQuests" },
 		{ text = "Show total counts in broker text", check = "showTotalsInBrokerText", submenu = {
+				{ text = ("|T%1$s:16:16|t  Polished Pet Charms"):format("Interface\\Icons\\inv_currency_petbattle"), check = "brokerShowPolishedPetCharms" },
 				{ text = ("|T%1$s:16:16|t  Artifact Power"):format("Interface\\Icons\\inv_smallazeriteshard"), check = "brokerShowAP" },
 				{ text = ("|T%1$s:16:16|t  Service Medals"):format(isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal"), check = "brokerShowServiceMedals" },
 				{ text = ("|T%1$s:16:16|t  Wakening Essences"):format("Interface\\Icons\\achievement_dungeon_ulduar80_25man"), check = "brokerShowWakeningEssences" },
@@ -2169,7 +2179,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Hallowfall Arathi"):format("Interface\\Icons\\ui_majorfactions_flame"), check = "brokerShowHallowfallArathi" },
 				{ text = ("|T%1$s:16:16|t  Valorstones"):format("Interface\\Icons\\inv_valorstone_base"), check = "brokerShowValorstones" },
 				{ text = ("|T%1$s:16:16|t  Kej"):format("Interface\\Icons\\inv_10_tailoring_silkrare_color3"), check = "brokerShowKej" },
-				{ text = ("|T%1$s:16:16|t  Polished Pet Charms"):format("Interface\\Icons\\inv_currency_petbattle"), check = "brokerShowPolishedPetCharms" },
+				{ text = ("|T%1$s:16:16|t  Council of Dornogal"):format("Interface\\Icons\\ui_majorfactions_storm"), check = "brokerShowCouncilofDornogal" },
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
@@ -2191,8 +2201,9 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%s$s:16:16|t  Resonance Crystals"):format("Interface\\Icons\\spell_azerite_essence14"), check = "showResonanceCrystals" },
 				{ text = ("|T%s$s:16:16|t  The Assembly of the Deeps"):format("Interface\\Icons\\ui_majorfactions_candle"), check = "showTheAssemblyoftheDeeps" },
 				{ text = ("|T%s$s:16:16|t  Hallowfall Arathi"):format("Interface\\Icons\\ui_majorfactions_flame"), check = "showHallowfallArathi" },
-				{ text = ("|T%1$s:16:16|t  Valorstones"):format("Interface\\Icons\\inv_valorstone_base"), check = "brokerShowValorstones" },
-				{ text = ("|T%1$s:16:16|t  Kej"):format("Interface\\Icons\\inv_10_tailoring_silkrare_color3"), check = "brokerShowKej" },
+				{ text = ("|T%1$s:16:16|t  Valorstones"):format("Interface\\Icons\\inv_valorstone_base"), check = "showValorstones" },
+				{ text = ("|T%1$s:16:16|t  Kej"):format("Interface\\Icons\\inv_10_tailoring_silkrare_color3"), check = "showKej" },
+				{ text = ("|T%1$s:16:16|t  Council of Dornogal"):format("Interface\\Icons\\ui_majorfactions_storm"), check = "showCouncilofDornogal" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {
