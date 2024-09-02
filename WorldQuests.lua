@@ -154,6 +154,9 @@ local defaultConfig = {
 		brokerShowKej = true,
 		brokerShowCouncilofDornogal = true,
 		brokerShowHallowfallArathi = true,
+		brokerShowTheWeaver = true,
+		brokerShowTheGeneral = true,
+		brokerShowTheVizier = true,
 		brokerShowBloodyTokens = true,
 		brokerShowPolishedPetCharms = false,
 	sortByTimeRemaining = false,
@@ -171,11 +174,14 @@ local defaultConfig = {
 	showAspectsAwakenedCrest = true,
 	showMysteriousFragment = true,
 	showResonanceCrystals = true,
+	showCouncilofDornogal = true,
 	showTheAssemblyoftheDeeps = true,
 	showHallowfallArathi = true,
+	showTheWeaver = true,
+	showTheGeneral = true,
+	showTheVizier = true,
 	showValorstones = true,
 	showKej = true,
-	showCouncilofDornogal = true,
 	showBloodyTokens = true,
 	showArtifactPower = true,
 	showPrismaticManapearl = true,
@@ -1013,6 +1019,18 @@ local RetrieveWorldQuests = function(mapId)
 									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL
 									quest.reward.CouncilofDornogalAmount = currency.amount
 									if C("showCouncilofDornogal") then quest.hide = false end
+								elseif currencyId == 3002 then -- The Weaver
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_WEAVER
+									quest.reward.TheWeaverAmount = currency.amount
+									if C("showTheWeaver") then quest.hide = false end
+								elseif currencyId == 3003 then -- The General
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_GENERAL
+									quest.reward.TheGeneralAmount = currency.amount
+									if C("showTheGeneral") then quest.hide = false end
+								elseif currencyId == 3004 then -- The Vizier
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_VIZIER
+									quest.reward.TheVizierAmount = currency.amount
+									if C("showTheVizier") then quest.hide = false end																		
 								else 
 									if WQB_DEBUG then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
@@ -1213,6 +1231,12 @@ local RetrieveWorldQuests = function(mapId)
 									BWQ.totalKej = BWQ.totalKej + quest.reward.KejAmount
 								elseif rtype == CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL then
 									BWQ.totalCouncilofDornogal = BWQ.totalCouncilofDornogal + quest.reward.CouncilofDornogalAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_WEAVER then
+									BWQ.totalTheWeaver = BWQ.totalTheWeaver + quest.reward.TheWeaverAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_GENERAL then
+									BWQ.totalTheGeneral = BWQ.totalTheGeneral + quest.reward.TheGeneralAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_VIZIER then
+									BWQ.totalTheVizier = BWQ.totalTheVizier + quest.reward.TheVizierAmount
 								end
 							end
 						end
@@ -1546,7 +1570,7 @@ end
 local originalMap, originalContinent, originalDungeonLevel
 function BWQ:UpdateQuestData()
 	questIds = BWQcache.questIds or {}
-	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies, BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras, BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering, BWQ.totalBloodyTokens, BWQ.totalDragonIslesSupplies, BWQ.totalElementalOverflow, BWQ.totalFlightstones, BWQ.totalWhelplingsDreamingCrest, BWQ.totalDrakesDreamingCrest, BWQ.totalWyrmsDreamingCrest, BWQ.totalAspectsDreamingCrest, BWQ.totalWhelplingsAwakenedCrest, BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment, BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej, BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies, BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras, BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering, BWQ.totalBloodyTokens, BWQ.totalDragonIslesSupplies, BWQ.totalElementalOverflow, BWQ.totalFlightstones, BWQ.totalWhelplingsDreamingCrest, BWQ.totalDrakesDreamingCrest, BWQ.totalWyrmsDreamingCrest, BWQ.totalAspectsDreamingCrest, BWQ.totalWhelplingsAwakenedCrest, BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment, BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej, BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 	for mapId in next, MAP_ZONES[expansion] do
 		RetrieveWorldQuests(mapId)
@@ -2103,6 +2127,9 @@ function BWQ:UpdateBlock()
 		if C("brokerShowValorstones") 			and BWQ.totalValorstones > 0			then brokerString = string.format("%s|TInterface\\Icons\\inv_valorstone_base:16:16|t %d  ", brokerString, BWQ.totalValorstones) end
 		if C("brokerShowKej") 					and BWQ.totalKej > 0					then brokerString = string.format("%s|TInterface\\Icons\\inv_10_tailoring_silkrare_color3:16:16|t %d  ", brokerString, BWQ.totalKej) end
 		if C("brokerShowCouncilofDornogal") 	and BWQ.totalCouncilofDornogal > 0		then brokerString = string.format("%s|TInterface\\Icons\\ui_majorfactions_storm:16:16|t %d  ", brokerString, BWQ.totalCouncilofDornogal) end
+		if C("brokerShowTheWeaver") 			and BWQ.totalTheWeaver > 0				then brokerString = string.format("%s|TInterface\\Icons\\ui_notoriety_theweaver:16:16|t %d  ", brokerString, BWQ.totalTheWeaver) end
+		if C("brokerShowTheGeneral") 			and BWQ.totalTheGeneral > 0				then brokerString = string.format("%s|TInterface\\Icons\\ui_notoriety_thegeneral:16:16|t %d  ", brokerString, BWQ.totalTheGeneral) end
+		if C("brokerShowTheVizier") 			and BWQ.totalTheVizier > 0				then brokerString = string.format("%s|TInterface\\Icons\\ui_notoriety_thevizier:16:16|t %d  ", brokerString, BWQ.totalTheVizier) end
 
 		if brokerString and brokerString ~= "" then
 			BWQ.WorldQuestsBroker.text = brokerString
@@ -2167,6 +2194,9 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Valorstones"):format("Interface\\Icons\\inv_valorstone_base"), check = "brokerShowValorstones" },
 				{ text = ("|T%1$s:16:16|t  Kej"):format("Interface\\Icons\\inv_10_tailoring_silkrare_color3"), check = "brokerShowKej" },
 				{ text = ("|T%1$s:16:16|t  Council of Dornogal"):format("Interface\\Icons\\ui_majorfactions_storm"), check = "brokerShowCouncilofDornogal" },
+				{ text = ("|T%1$s:16:16|t  The Weaver"):format("Interface\\Icons\\ui_notoriety_theweaver"), check = "brokerShowTheWeaver" },
+				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "brokerShowTheGeneral" },
+				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "brokerShowTheVizier" },
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
@@ -2191,6 +2221,9 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Valorstones"):format("Interface\\Icons\\inv_valorstone_base"), check = "showValorstones" },
 				{ text = ("|T%1$s:16:16|t  Kej"):format("Interface\\Icons\\inv_10_tailoring_silkrare_color3"), check = "showKej" },
 				{ text = ("|T%1$s:16:16|t  Council of Dornogal"):format("Interface\\Icons\\ui_majorfactions_storm"), check = "showCouncilofDornogal" },
+				{ text = ("|T%1$s:16:16|t  The Weaver"):format("Interface\\Icons\\ui_notoriety_theweaver"), check = "ShowTheWeaver" },
+				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "ShowTheGeneral" },
+				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "ShowTheVizier" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {

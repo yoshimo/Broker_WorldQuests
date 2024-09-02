@@ -1,3 +1,6 @@
+### 11.0.2.12
+* Added support for The Weaver, The General, and The Vizier currencies
+
 ### 11.0.2.11
 * Fixed shift-clicking rows to set quest tracker
 

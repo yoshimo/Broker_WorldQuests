@@ -81,6 +81,9 @@ CONSTANTS.REWARD_TYPES = {
 	VALORSTONES = 35,
 	KEJ = 36,
 	COUNCIL_OF_DORNOGAL = 37,
+	THE_WEAVER = 38,
+	THE_GENERAL = 39,
+	THE_VIZIER = 40,
 }
 
 CONSTANTS.QUEST_TYPES = {
@@ -133,6 +136,9 @@ CONSTANTS.THEWARWITHIN_REPUTATION_CURRENCY_IDS = {
 	[2902] = true, -- The Assembly of the Deeps
 	[2899] = true, -- Hallowfall Arathi
 	[2897] = true, -- Council of Dornogal
+	[3002] = true, -- The Weaver
+	[3003] = true, -- The General
+	[3004] = true, -- The Vizier
 }
 
 CONSTANTS.DRAGONFLIGHT_REPUTATION_CURRENCY_IDS = {
