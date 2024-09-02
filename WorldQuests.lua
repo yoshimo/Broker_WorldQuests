@@ -9,23 +9,13 @@
 --
 --]]----
 
-local GetAchievementInfo
-	= GetAchievementInfo
-
-local REPUTATION
-	= REPUTATION
-
 local _, addon = ...
 local CONSTANTS = addon.CONSTANTS
 local WQB_DEBUG = false
-
 local isHorde = UnitFactionGroup("player") == "Horde"
 
-local ITEM_QUALITY_COLORS, WORLD_QUEST_QUALITY_COLORS, UnitLevel
-	= ITEM_QUALITY_COLORS, WORLD_QUEST_QUALITY_COLORS, UnitLevel
-
-local             GetQuestsForPlayerByMapID,             GetQuestTimeLeftMinutes,             GetQuestInfoByQuestID,             GetQuestProgressBarInfo,            QuestHasWarModeBonus
-	= C_TaskQuest.GetQuestsForPlayerByMapID, C_TaskQuest.GetQuestTimeLeftMinutes, C_TaskQuest.GetQuestInfoByQuestID, C_TaskQuest.GetQuestProgressBarInfo, C_QuestLog.QuestHasWarModeBonus
+local             GetQuestInfoByQuestID,             GetQuestProgressBarInfo,            QuestHasWarModeBonus
+	= C_TaskQuest.GetQuestInfoByQuestID, C_TaskQuest.GetQuestProgressBarInfo, C_QuestLog.QuestHasWarModeBonus
 
 local            GetQuestTagInfo,            IsQuestFlaggedCompleted,            IsQuestCriteriaForBounty,            GetBountiesForMapID,            GetLogIndexForQuestID,            GetTitleForLogIndex,            GetQuestWatchType
 	= C_QuestLog.GetQuestTagInfo, C_QuestLog.IsQuestFlaggedCompleted, C_QuestLog.IsQuestCriteriaForBounty, C_QuestLog.GetBountiesForMapID, C_QuestLog.GetLogIndexForQuestID, C_QuestLog.GetTitleForLogIndex, C_QuestLog.GetQuestWatchType
@@ -41,9 +31,6 @@ local       GetBestMapForUnit,       GetMapInfo
 
 local       IsWarModeDesired
 	= C_PvP.IsWarModeDesired
-
-local GetQuestObjectiveInfo, GetNumQuestLogRewards, GetQuestLogRewardInfo, GetQuestLogRewardMoney, HaveQuestData
-= GetQuestObjectiveInfo, GetNumQuestLogRewards, GetQuestLogRewardInfo, GetQuestLogRewardMoney, HaveQuestData
 
 -- When adding zones to MAP_ZONES, be sure to also add the zoneID to MAP_ZONES_SORT immediately below
 -- The simplest way to get the MapID for the zone you are currently in is to enter "/dump C_Map.GetBestMapForUnit("player")"
@@ -666,7 +653,7 @@ BWQ.mapTextures = mapTextures
 
 
 function BWQ:QueryZoneQuestCoordinates(mapId)
-	local quests = GetQuestsForPlayerByMapID(mapId)
+	local quests = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	if quests then
 		for _, v in next, quests do
 			local quest = MAP_ZONES[expansion][mapId].quests[v.questId] 
@@ -722,7 +709,7 @@ local RetrieveWorldQuests = function(mapId)
 
 	local numQuests = 0
 	local currentTime = GetTime()
-	local questList = GetQuestsForPlayerByMapID(mapId)
+	local questList = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	warmodeEnabled = IsWarModeDesired()
 
 	-- quest object fields are: x, y, floor, numObjectives, questId, inProgress
@@ -755,7 +742,7 @@ local RetrieveWorldQuests = function(mapId)
 					}
 				]]
 
-				timeLeft = GetQuestTimeLeftMinutes(q.questId) or 0
+				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
 				questTagInfo = GetQuestTagInfo(q.questId)
 
 				if questTagInfo and questTagInfo.worldQuestType then
@@ -776,7 +763,7 @@ local RetrieveWorldQuests = function(mapId)
 					quest.hide = true
 					quest.sort = 0
 
-					-- GetQuestsForPlayerByMapID fields
+					-- C_TaskQuest.GetQuestsForPlayerByMapID fields
 					quest.questId = questId
 					quest.numObjectives = q.numObjectives
 					quest.xFlight = q.x
@@ -1296,7 +1283,7 @@ function BWQ:UpdateBountyData()
 	for bountyIndex, bounty in ipairs(bounties) do
 		local questIndex = GetLogIndexForQuestID(bounty.questID)
 		local title = GetTitleForLogIndex(questIndex)
-		local timeleft = GetQuestTimeLeftMinutes(bounty.questID)
+		local timeleft = C_TaskQuest.GetQuestTimeLeftMinutes(bounty.questID)
 		local _, _, finished, numFulfilled, numRequired = GetQuestObjectiveInfo(bounty.questID, 1, false)
 
 		local bountyCacheItem
