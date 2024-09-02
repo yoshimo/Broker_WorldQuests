@@ -11,81 +11,73 @@
 
 local _, addon = ...
 local CONSTANTS = addon.CONSTANTS
-local WQB_DEBUG = false
+local WQB_DEBUG = true
 local isHorde = UnitFactionGroup("player") == "Horde"
-
-local             GetQuestInfoByQuestID,             GetQuestProgressBarInfo,            QuestHasWarModeBonus
-	= C_TaskQuest.GetQuestInfoByQuestID, C_TaskQuest.GetQuestProgressBarInfo, C_QuestLog.QuestHasWarModeBonus
-
-local            GetQuestTagInfo,            IsQuestFlaggedCompleted,            IsQuestCriteriaForBounty,            GetBountiesForMapID,            GetLogIndexForQuestID,            GetTitleForLogIndex,            GetQuestWatchType
-	= C_QuestLog.GetQuestTagInfo, C_QuestLog.IsQuestFlaggedCompleted, C_QuestLog.IsQuestCriteriaForBounty, C_QuestLog.GetBountiesForMapID, C_QuestLog.GetLogIndexForQuestID, C_QuestLog.GetTitleForLogIndex, C_QuestLog.GetQuestWatchType
-
-local              GetSuperTrackedQuestID
-	= C_SuperTrack.GetSuperTrackedQuestID
-
-local              IsFactionParagon,              GetFactionParagonInfo
-	= C_Reputation.IsFactionParagon, C_Reputation.GetFactionParagonInfo
-
-local       GetBestMapForUnit,       GetMapInfo
-	= C_Map.GetBestMapForUnit, C_Map.GetMapInfo
-
-local       IsWarModeDesired
-	= C_PvP.IsWarModeDesired
+local expansion
+local warmodeEnabled = false
+local bounties = {}
+local questIds = {}
+local numQuestsTotal, totalWidth, offsetTop = 0, 0, -15
+local hasCollapsedQuests = false
+local showDownwards = false
+local blockYPos = 0
+local highlightedRow = true
+local hasUnlockedWorldQuests
 
 -- When adding zones to MAP_ZONES, be sure to also add the zoneID to MAP_ZONES_SORT immediately below
 -- The simplest way to get the MapID for the zone you are currently in is to enter "/dump C_Map.GetBestMapForUnit("player")"
 local MAP_ZONES = {
 	[CONSTANTS.EXPANSIONS.THEWARWITHIN] = {
-		[2248] = { id = 2248, name = GetMapInfo(2248).name, quests = {}, buttons = {}, }, -- Isle of Dorn 11.0
-		[2214] = { id = 2214, name = GetMapInfo(2214).name, quests = {}, buttons = {}, }, -- The Ringing Deeps 11.0
-		[2215] = { id = 2215, name = GetMapInfo(2215).name, quests = {}, buttons = {}, }, -- Hallowfall 11.0
-		[2255] = { id = 2255, name = GetMapInfo(2255).name, quests = {}, buttons = {}, }, -- Azj-Kahet 11.0
+		[2248] = { id = 2248, name = C_Map.GetMapInfo(2248).name, quests = {}, buttons = {}, }, -- Isle of Dorn 11.0
+		[2214] = { id = 2214, name = C_Map.GetMapInfo(2214).name, quests = {}, buttons = {}, }, -- The Ringing Deeps 11.0
+		[2215] = { id = 2215, name = C_Map.GetMapInfo(2215).name, quests = {}, buttons = {}, }, -- Hallowfall 11.0
+		[2255] = { id = 2255, name = C_Map.GetMapInfo(2255).name, quests = {}, buttons = {}, }, -- Azj-Kahet 11.0
 	},
 	[CONSTANTS.EXPANSIONS.DRAGONFLIGHT] = {
-		[2022] = { id = 2022, name = GetMapInfo(2022).name, quests = {}, buttons = {}, }, -- The Waking Shores 10.0
-		[2023] = { id = 2023, name = GetMapInfo(2023).name, quests = {}, buttons = {}, }, -- Ohn'ahran Plains 10.0
-		[2024] = { id = 2024, name = GetMapInfo(2024).name, quests = {}, buttons = {}, }, -- The Azure Span 10.0
-		[2025] = { id = 2025, name = GetMapInfo(2025).name, quests = {}, buttons = {}, }, -- Thaldraszus 10.0
-		[2085] = { id = 2085, name = GetMapInfo(2085).name, quests = {}, buttons = {}, }, -- Primalist Tomorrow 10.0
-		[2151] = { id = 2151, name = GetMapInfo(2151).name, quests = {}, buttons = {}, }, -- The Forbidden Reach 10.0.7
-		[2133] = { id = 2133, name = GetMapInfo(2133).name, quests = {}, buttons = {}, }, -- Zaralek Cavern 10.1
-		[2200] = { id = 2200, name = GetMapInfo(2200).name, quests = {}, buttons = {}, }, -- Emerald Dream 10.2
+		[2022] = { id = 2022, name = C_Map.GetMapInfo(2022).name, quests = {}, buttons = {}, }, -- The Waking Shores 10.0
+		[2023] = { id = 2023, name = C_Map.GetMapInfo(2023).name, quests = {}, buttons = {}, }, -- Ohn'ahran Plains 10.0
+		[2024] = { id = 2024, name = C_Map.GetMapInfo(2024).name, quests = {}, buttons = {}, }, -- The Azure Span 10.0
+		[2025] = { id = 2025, name = C_Map.GetMapInfo(2025).name, quests = {}, buttons = {}, }, -- Thaldraszus 10.0
+		[2085] = { id = 2085, name = C_Map.GetMapInfo(2085).name, quests = {}, buttons = {}, }, -- Primalist Tomorrow 10.0
+		[2151] = { id = 2151, name = C_Map.GetMapInfo(2151).name, quests = {}, buttons = {}, }, -- The Forbidden Reach 10.0.7
+		[2133] = { id = 2133, name = C_Map.GetMapInfo(2133).name, quests = {}, buttons = {}, }, -- Zaralek Cavern 10.1
+		[2200] = { id = 2200, name = C_Map.GetMapInfo(2200).name, quests = {}, buttons = {}, }, -- Emerald Dream 10.2
 	},
 	[CONSTANTS.EXPANSIONS.SHADOWLANDS] = {
-		[1525] = { id = 1525, name = GetMapInfo(1525).name, quests = {}, buttons = {}, }, -- Revendreth 9.0
-		[1533] = { id = 1533, name = GetMapInfo(1533).name, quests = {}, buttons = {}, }, -- Bastion 9.0
-		[1536] = { id = 1536, name = GetMapInfo(1536).name, quests = {}, buttons = {}, }, -- Maldraxxus 9.0
-		[1565] = { id = 1565, name = GetMapInfo(1565).name, quests = {}, buttons = {}, }, -- Ardenwald 9.0
-		[1543] = { id = 1543, name = GetMapInfo(1543).name, quests = {}, buttons = {}, }, -- The Maw 9.1
-		[1970] = { id = 1970, name = GetMapInfo(1970).name, quests = {}, buttons = {}, }, -- Zereth Mortis 9.2
+		[1525] = { id = 1525, name = C_Map.GetMapInfo(1525).name, quests = {}, buttons = {}, }, -- Revendreth 9.0
+		[1533] = { id = 1533, name = C_Map.GetMapInfo(1533).name, quests = {}, buttons = {}, }, -- Bastion 9.0
+		[1536] = { id = 1536, name = C_Map.GetMapInfo(1536).name, quests = {}, buttons = {}, }, -- Maldraxxus 9.0
+		[1565] = { id = 1565, name = C_Map.GetMapInfo(1565).name, quests = {}, buttons = {}, }, -- Ardenwald 9.0
+		[1543] = { id = 1543, name = C_Map.GetMapInfo(1543).name, quests = {}, buttons = {}, }, -- The Maw 9.1
+		[1970] = { id = 1970, name = C_Map.GetMapInfo(1970).name, quests = {}, buttons = {}, }, -- Zereth Mortis 9.2
 	},
 	[CONSTANTS.EXPANSIONS.BFA] = {
-		[863] = { id = 863, name = GetMapInfo(863).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },  -- Nazmir
-		[864] = { id = 864, name = GetMapInfo(864).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },  -- Vol'dun
-		[862] = { id = 862, name = GetMapInfo(862).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },  -- Zuldazar
-		[895] = { id = 895, name = GetMapInfo(895).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },  -- Tiragarde
-		[942] = { id = 942, name = GetMapInfo(942).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },  -- Stormsong Valley
-		[896] = { id = 896, name = GetMapInfo(896).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },  -- Drustvar
-		[1161] = { id = 1161, name = GetMapInfo(1161).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },  -- Boralus
-		[1527] = { id = 1527, name = GetMapInfo(1527).name, quests = {}, buttons = {}, },  -- Uldum 8.3
-		[1530] = { id = 1530, name = GetMapInfo(1530).name, quests = {}, buttons = {}, },  -- Valley of Eternal Blossoms 8.3
-		[1355] = { id = 1355, name = GetMapInfo(1355).name, quests = {}, buttons = {}, },  -- Nazjatar 8.2
-		[1462] = { id = 1462, name = GetMapInfo(1462).name, quests = {}, buttons = {}, },  -- Mechagon 8.2
-		[14] = { id = 14, name = GetMapInfo(14).name,  quests = {}, buttons = {}, },  -- Arathi
-		[62] = { id = 62, name = GetMapInfo(62).name,  quests = {}, buttons = {}, },  -- Darkshore
+		[863] = { id = 863,   name = C_Map.GetMapInfo(863).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },      -- Nazmir
+		[864] = { id = 864,   name = C_Map.GetMapInfo(864).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },      -- Vol'dun
+		[862] = { id = 862,   name = C_Map.GetMapInfo(862).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },      -- Zuldazar
+		[895] = { id = 895,   name = C_Map.GetMapInfo(895).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },   -- Tiragarde
+		[942] = { id = 942,   name = C_Map.GetMapInfo(942).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },   -- Stormsong Valley
+		[896] = { id = 896,   name = C_Map.GetMapInfo(896).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },   -- Drustvar
+		[1161] = { id = 1161, name = C_Map.GetMapInfo(1161).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },  -- Boralus
+		[1527] = { id = 1527, name = C_Map.GetMapInfo(1527).name, quests = {}, buttons = {}, },  -- Uldum 8.3
+		[1530] = { id = 1530, name = C_Map.GetMapInfo(1530).name, quests = {}, buttons = {}, },  -- Valley of Eternal Blossoms 8.3
+		[1355] = { id = 1355, name = C_Map.GetMapInfo(1355).name, quests = {}, buttons = {}, },  -- Nazjatar 8.2
+		[1462] = { id = 1462, name = C_Map.GetMapInfo(1462).name, quests = {}, buttons = {}, },  -- Mechagon 8.2
+		[14] = { id = 14,     name = C_Map.GetMapInfo(14).name,  quests = {}, buttons = {}, },   -- Arathi
+		[62] = { id = 62,     name = C_Map.GetMapInfo(62).name,  quests = {}, buttons = {}, },   -- Darkshore
 	},
 	[CONSTANTS.EXPANSIONS.LEGION] = {
-		[630] = { id = 630, name = GetMapInfo(630).name, quests = {}, buttons = {}, },  -- Aszuna
-		[790] = { id = 790, name = GetMapInfo(790).name, quests = {}, buttons = {}, },  -- Eye of Azshara
-		[641] = { id = 641, name = GetMapInfo(641).name, quests = {}, buttons = {}, },  -- Val'sharah
-		[650] = { id = 650, name = GetMapInfo(650).name, quests = {}, buttons = {}, },  -- Highmountain
-		[634] = { id = 634, name = GetMapInfo(634).name, quests = {}, buttons = {}, },  -- Stormheim
-		[680] = { id = 680, name = GetMapInfo(680).name, quests = {}, buttons = {}, },  -- Suramar
-		[627] = { id = 627, name = GetMapInfo(627).name, quests = {}, buttons = {}, },  -- Dalaran
-		[646] = { id = 646, name = GetMapInfo(646).name, quests = {}, buttons = {}, },  -- Broken Shore
-		[830] = { id = 830, name = GetMapInfo(830).name, quests = {}, buttons = {}, },  -- Krokuun
-		[882] = { id = 882, name = GetMapInfo(882).name, quests = {}, buttons = {}, },  -- Mac'aree
-		[885] = { id = 885, name = GetMapInfo(885).name, quests = {}, buttons = {}, },  -- Antoran Wastes
+		[630] = { id = 630,   name = C_Map.GetMapInfo(630).name, quests = {}, buttons = {}, },   -- Aszuna
+		[790] = { id = 790,   name = C_Map.GetMapInfo(790).name, quests = {}, buttons = {}, },   -- Eye of Azshara
+		[641] = { id = 641,   name = C_Map.GetMapInfo(641).name, quests = {}, buttons = {}, },   -- Val'sharah
+		[650] = { id = 650,   name = C_Map.GetMapInfo(650).name, quests = {}, buttons = {}, },   -- Highmountain
+		[634] = { id = 634,   name = C_Map.GetMapInfo(634).name, quests = {}, buttons = {}, },   -- Stormheim
+		[680] = { id = 680,   name = C_Map.GetMapInfo(680).name, quests = {}, buttons = {}, },   -- Suramar
+		[627] = { id = 627,   name = C_Map.GetMapInfo(627).name, quests = {}, buttons = {}, },   -- Dalaran
+		[646] = { id = 646,   name = C_Map.GetMapInfo(646).name, quests = {}, buttons = {}, },   -- Broken Shore
+		[830] = { id = 830,   name = C_Map.GetMapInfo(830).name, quests = {}, buttons = {}, },   -- Krokuun
+		[882] = { id = 882,   name = C_Map.GetMapInfo(882).name, quests = {}, buttons = {}, },   -- Mac'aree
+		[885] = { id = 885,   name = C_Map.GetMapInfo(885).name, quests = {}, buttons = {}, },   -- Antoran Wastes
 	},
 }
 local MAP_ZONES_SORT = {
@@ -105,7 +97,6 @@ local MAP_ZONES_SORT = {
 		630, 790, 641, 650, 634, 680, 627, 646, 830, 882, 885
 	},
 }
-
 
 local defaultConfig = {
 	-- general
@@ -282,9 +273,6 @@ local C = function(k)
 	end
 end
 
-local expansion
-local warmodeEnabled = false
-
 local BWQ = CreateFrame("Frame", "Broker_WorldQuests", UIParent, "BackdropTemplate")
 BWQ:EnableMouse(true)
 BWQ:SetBackdrop({
@@ -391,20 +379,10 @@ BWQ.slider:SetBackdrop( {
 	insets = { left=3, right=3, top=6, bottom=6 }
 } )
 BWQ.slider:SetValueStep(1)
-
 BWQ.slider:SetHeight(200)
 BWQ.slider:SetMinMaxValues( 0, 100 )
 BWQ.slider:SetValue(0)
 BWQ.slider:Hide()
-
-
-local bounties = {}
-local questIds = {}
-local numQuestsTotal, totalWidth, offsetTop = 0, 0, -15
-local hasCollapsedQuests = false
-local showDownwards = false
-local blockYPos = 0
-local highlightedRow = true
 
 local CreateErrorFS = function()
 	BWQ.errorFS = BWQ:CreateFontString("BWQerrorFS", "OVERLAY", "SystemFont_Shadow_Med1")
@@ -412,23 +390,22 @@ local CreateErrorFS = function()
 	BWQ.errorFS:SetTextColor(.9, .8, 0)
 end
 
-local hasUnlockedWorldQuests
 function BWQ:WorldQuestsUnlocked()
 	if not hasUnlockedWorldQuests then
 		if (expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN) then
-			hasUnlockedWorldQuests = IsQuestFlaggedCompleted(79573) -- See effect #1 under https://www.wowhead.com/spell=434027/world-quests-adventure-mode
+			hasUnlockedWorldQuests = C_QuestLog.IsQuestFlaggedCompleted(79573) -- See effect #1 under https://www.wowhead.com/spell=434027/world-quests-adventure-mode
 		elseif (expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT) then
 			_, _, _, hasUnlockedWorldQuests = GetAchievementInfo(16326)
 			if not hasUnlockedWorldQuests then
-				hasUnlockedWorldQuests = UnitLevel("player") >= 68 and IsQuestFlaggedCompleted(66221)
+				hasUnlockedWorldQuests = UnitLevel("player") >= 68 and C_QuestLog.IsQuestFlaggedCompleted(66221)
 			end
 		else
-			hasUnlockedWorldQuests = (expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS and UnitLevel("player") >= 51 and IsQuestFlaggedCompleted(57559))
+			hasUnlockedWorldQuests = (expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS and UnitLevel("player") >= 51 and C_QuestLog.IsQuestFlaggedCompleted(57559))
 				or (expansion == CONSTANTS.EXPANSIONS.BFA and UnitLevel("player") >= 50 and
-					(IsQuestFlaggedCompleted(51916) or IsQuestFlaggedCompleted(52451) -- horde
-					or IsQuestFlaggedCompleted(51918) or IsQuestFlaggedCompleted(52450))) -- alliance
+					(C_QuestLog.IsQuestFlaggedCompleted(51916) or C_QuestLog.IsQuestFlaggedCompleted(52451) -- horde
+					or C_QuestLog.IsQuestFlaggedCompleted(51918) or C_QuestLog.IsQuestFlaggedCompleted(52450))) -- alliance
 				or (expansion == CONSTANTS.EXPANSIONS.LEGION and UnitLevel("player") >= 45 and
-					(IsQuestFlaggedCompleted(43341) or IsQuestFlaggedCompleted(45727))) -- broken isles
+					(C_QuestLog.IsQuestFlaggedCompleted(43341) or C_QuestLog.IsQuestFlaggedCompleted(45727))) -- broken isles
 		end
 	end
 
@@ -590,7 +567,6 @@ local FormatTimeLeftString = function(timeLeft)
 	return timeLeftStr
 end
 
-
 local tip = GameTooltip
 local ShowQuestObjectiveTooltip = function(row)
 	tip:SetOwner(row, "ANCHOR_CURSOR")
@@ -605,7 +581,7 @@ local ShowQuestObjectiveTooltip = function(row)
 		end
 	end
 
-	local percent = GetQuestProgressBarInfo(row.quest.questId)
+	local percent = C_TaskQuest.GetQuestProgressBarInfo(row.quest.questId)
 	if percent then
 		GameTooltip_ShowProgressBar(tip, 0, 100, percent, PERCENTAGE_STRING:format(percent))
 	end
@@ -677,7 +653,7 @@ end
 local currentTomTomWaypoint
 local Row_OnClick = function(row)
 	if IsShiftKeyDown() then
-		if (GetQuestWatchType(row.quest.questId) == Enum.QuestWatchType.Manual or GetSuperTrackedQuestID() == row.quest.questId) then
+		if (C_QuestLog.GetQuestWatchType(row.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == row.quest.questId) then
 			C_QuestLog.RemoveWorldQuestWatch(row.quest.questId)
 		else
 			C_QuestLog.AddWorldQuestWatch(row.quest.questId, Enum.QuestWatchType.Manual)
@@ -716,7 +692,7 @@ local RetrieveWorldQuests = function(mapId)
 	local numQuests = 0
 	local currentTime = GetTime()
 	local questList = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
-	warmodeEnabled = IsWarModeDesired()
+	warmodeEnabled = C_PvP.IsWarModeDesired()
 
 	-- quest object fields are: x, y, floor, numObjectives, questId, inProgress
 	if questList then
@@ -749,7 +725,7 @@ local RetrieveWorldQuests = function(mapId)
 				]]
 
 				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
-				questTagInfo = GetQuestTagInfo(q.questId)
+				questTagInfo = C_QuestLog.GetQuestTagInfo(q.questId)
 
 				if questTagInfo and questTagInfo.worldQuestType then
 					local questId = q.questId
@@ -775,14 +751,14 @@ local RetrieveWorldQuests = function(mapId)
 					quest.xFlight = q.x
 					quest.yFlight = q.y
 
-					-- GetQuestTagInfo fields
+					-- C_QuestLog.GetQuestTagInfo fields
 					quest.tagId = questTagInfo.tagID
 					quest.tagName = questTagInfo.tagName
 					quest.worldQuestType = questTagInfo.worldQuestType
 					quest.quality = questTagInfo.quality
 					quest.isElite = questTagInfo.isElite
 
-					title, factionId = GetQuestInfoByQuestID(quest.questId)
+					title, factionId = C_TaskQuest.GetQuestInfoByQuestID(quest.questId)
 					quest.title = title
 					quest.factionId = factionId
 					if factionId then
@@ -1051,7 +1027,7 @@ local RetrieveWorldQuests = function(mapId)
 					if not hasReward then needsRefresh = true end -- in most cases no reward means api returned incomplete data
 					
 					for _, bounty in ipairs(bounties) do
-						if IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
+						if C_QuestLog.IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
 							quest.bounties[#quest.bounties + 1] = bounty.icon
 						end
 					end
@@ -1297,7 +1273,7 @@ function BWQ:UpdateBountyData()
 		item.button:Show()
 	end
 
-	bounties = GetBountiesForMapID(expansion == CONSTANTS.EXPANSIONS.BFA and CONSTANTS.MAPID_KUL_TIRAS or CONSTANTS.MAPID_DALARAN_BROKEN_ISLES) or {}
+	bounties = C_QuestLog.GetBountiesForMapID(expansion == CONSTANTS.EXPANSIONS.BFA and CONSTANTS.MAPID_KUL_TIRAS or CONSTANTS.MAPID_DALARAN_BROKEN_ISLES) or {}
 	if #bounties == 0 then
 		BWQ.bountyDisplay:Hide()
 		return
@@ -1305,8 +1281,8 @@ function BWQ:UpdateBountyData()
 
 	local bountyWidth = 0 -- added width of all items inside the bounty block
 	for bountyIndex, bounty in ipairs(bounties) do
-		local questIndex = GetLogIndexForQuestID(bounty.questID)
-		local title = GetTitleForLogIndex(questIndex)
+		local questIndex = C_QuestLog.GetLogIndexForQuestID(bounty.questID)
+		local title = C_QuestLog.GetTitleForLogIndex(questIndex)
 		local timeleft = C_TaskQuest.GetQuestTimeLeftMinutes(bounty.questID)
 		local _, _, finished, numFulfilled, numRequired = GetQuestObjectiveInfo(bounty.questID, 1, false)
 
@@ -1376,8 +1352,8 @@ function BWQ:UpdateBountyData()
 end
 
 function BWQ:ShowBountyTooltip(button, questId)
-	local questIndex = GetLogIndexForQuestID(questId)
-	local title = GetTitleForLogIndex(questIndex)
+	local questIndex = C_QuestLog.GetLogIndexForQuestID(questId)
+	local title = C_QuestLog.GetTitleForLogIndex(questIndex)
 	if title then
 		GameTooltip:SetOwner(button, "ANCHOR_BOTTOM")
 		GameTooltip:SetText(title, HIGHLIGHT_FONT_COLOR:GetRGB())
@@ -1461,7 +1437,7 @@ function BWQ:UpdateParagonData()
 	local row
 	local factionId
 	for _, factionId in next, paragonFactions.order do
-		if IsFactionParagon(factionId) then
+		if C_Reputation.IsFactionParagon(factionId) then
 			
 			local factionFrame
 
@@ -1504,7 +1480,7 @@ function BWQ:UpdateParagonData()
 			row:Show()
 
 			local name = C_Reputation.GetFactionDataByID(factionId).name
-			local current, threshold, rewardQuestId, hasRewardPending = GetFactionParagonInfo(factionId)
+			local current, threshold, rewardQuestId, hasRewardPending = C_Reputation.GetFactionParagonInfo(factionId)
 			
 			local progress = 0
 			if current and threshold then progress = (current % threshold) / threshold * 50 end
@@ -1570,7 +1546,14 @@ end
 local originalMap, originalContinent, originalDungeonLevel
 function BWQ:UpdateQuestData()
 	questIds = BWQcache.questIds or {}
-	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies, BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras, BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering, BWQ.totalBloodyTokens, BWQ.totalDragonIslesSupplies, BWQ.totalElementalOverflow, BWQ.totalFlightstones, BWQ.totalWhelplingsDreamingCrest, BWQ.totalDrakesDreamingCrest, BWQ.totalWyrmsDreamingCrest, BWQ.totalAspectsDreamingCrest, BWQ.totalWhelplingsAwakenedCrest, BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment, BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej, BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies = 0, 0, 0, 0, 0, 0
+	BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras = 0, 0, 0, 0, 0, 0, 0
+	BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering = 0, 0, 0, 0, 0
+	BWQ.totalBloodyTokens, BWQ.totalDragonIslesSupplies, BWQ.totalElementalOverflow, BWQ.totalFlightstones, BWQ.totalWhelplingsDreamingCrest = 0, 0, 0, 0, 0
+	BWQ.totalDrakesDreamingCrest, BWQ.totalWyrmsDreamingCrest, BWQ.totalAspectsDreamingCrest, BWQ.totalWhelplingsAwakenedCrest = 0, 0, 0, 0
+	BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment = 0, 0, 0, 0
+	BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej = 0, 0, 0, 0, 0
+	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
 
 	for mapId in next, MAP_ZONES[expansion] do
 		RetrieveWorldQuests(mapId)
@@ -2002,7 +1985,7 @@ function BWQ:UpdateBlock()
 			--local titleWidth = button.titleFS:GetStringWidth()
 			--if titleWidth > titleMaxWidth then titleMaxWidth = titleWidth end
 
-			if GetQuestWatchType(button.quest.questId) == Enum.QuestWatchType.Manual or GetSuperTrackedQuestID() == button.quest.questId then
+			if C_QuestLog.GetQuestWatchType(button.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == button.quest.questId then
 				button.track:Show()
 			else
 				button.track:Hide()
@@ -2595,7 +2578,7 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			BWQ:UnregisterEvent("ADDON_LOADED")
 		end
 	elseif event == "QUEST_ACCEPTED" then
-		if TomTom and currentTomTomWaypoint and (GetTitleForLogIndex(arg1) == currentTomTomWaypoint.title) then TomTom:RemoveWaypoint(currentTomTomWaypoint) end
+		if TomTom and currentTomTomWaypoint and (C_QuestLog.GetTitleForLogIndex(arg1) == currentTomTomWaypoint.title) then TomTom:RemoveWaypoint(currentTomTomWaypoint) end
 	elseif event == "PLAYER_LOGOUT" then
 		if TomTom and currentTomTomWaypoint then TomTom:RemoveWaypoint(currentTomTomWaypoint) end
 	end
