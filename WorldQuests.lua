@@ -9,7 +9,7 @@
 --
 --]]----
 
-local BWQ_DEBUG = true
+local BWQ_DEBUG = false
 local _, addon = ...
 local CONSTANTS = addon.CONSTANTS
 local isHorde = UnitFactionGroup("player") == "Horde"
