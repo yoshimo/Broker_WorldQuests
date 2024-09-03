@@ -9,9 +9,9 @@
 --
 --]]----
 
+local BWQ_DEBUG = true
 local _, addon = ...
 local CONSTANTS = addon.CONSTANTS
-local WQB_DEBUG = true
 local isHorde = UnitFactionGroup("player") == "Horde"
 local expansion
 local warmodeEnabled = false
@@ -118,6 +118,7 @@ local defaultConfig = {
 		brokerGratefulOffering = true,
 		brokerShowResources = true,
 		brokerShowLegionfallSupplies = true,
+		brokerShowXP = true,
 		brokerShowHonor = true,
 		brokerShowGold = false,
 		brokerShowGear = false,
@@ -190,6 +191,7 @@ local defaultConfig = {
 	showSLReputation = true,
 	showBFAReputation = true,
 	showBFAServiceMedals = true,
+	showXP = true,
 	showHonor = true,
 	showLowGold = true,
 	showHighGold = true,
@@ -701,29 +703,8 @@ local RetrieveWorldQuests = function(mapId)
 
 		local timeLeft, questTagInfo, title, factionId
 		for i, q in ipairs(questList) do
-				if HaveQuestData(q.questId) and q.mapID == mapId then 
-				--[[
-					questTagInfo = {
-						tagId = 116
-						tagName = Blacksmithing World Quest
-						worldQuestType =
-							1 -> profession,
-							2 -> pve?
-							3 -> pvp
-							4 -> battle pet
-							5 -> ??
-							6 -> dungeon
-							7 -> invasion
-							8 -> raid
-						quality =
-							1 -> normal
-							2 -> rare
-							3 -> epic
-						isElite = true/false
-						tradeskillLineIndex = some number, no idea of meaning atm
-					}
-				]]
-
+			--print(string.format("[BWQ] questList.%d (ID: %s) (Loc: %s, %s)", i, q.questId, q.x, q.y))   -- for debugging
+			if HaveQuestData(q.questId) and q.mapID == mapId then 
 				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
 				questTagInfo = C_QuestLog.GetQuestTagInfo(q.questId)
 
@@ -828,6 +809,7 @@ local RetrieveWorldQuests = function(mapId)
 							if C("showHighGold") then quest.hide = false end
 						end
 					end
+					-- honor reward
 					local honor = GetQuestLogRewardHonor(quest.questId)
 					if honor > 0 then
 						hasReward = true
@@ -846,7 +828,8 @@ local RetrieveWorldQuests = function(mapId)
 							local texture = currencyInfo.texture
 							local numItems = currencyInfo.totalRewardAmount
 							local currencyId = currencyInfo.currencyID
-							--print(string.format("[BWQ] currencyInfo: %d - %s - %d - %d - %d", i, name, texture, numItems, currencyId))	-- Debugging
+							--print(string.format("[BWQ] QuestID: %d", quest.questId))														-- Debugging
+							--print(string.format("[BWQ] - currencyInfo: %d - %s - %d - %d - %d", i, name, texture, numItems, currencyId))	-- Debugging
 							if name then
 								hasReward = true
 								local currency = {}
@@ -1008,7 +991,7 @@ local RetrieveWorldQuests = function(mapId)
 									quest.reward.TheVizierAmount = currency.amount
 									if C("showTheVizier") then quest.hide = false end																		
 								else 
-									if WQB_DEBUG then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
+									if BWQ_DEBUG then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
 								quest.reward.currencies[#quest.reward.currencies + 1] = currency
 
@@ -1020,8 +1003,19 @@ local RetrieveWorldQuests = function(mapId)
 							end
 						end
 					end
-
-					if WQB_DEBUG and not hasReward and not HaveQuestData(quest.questId) then
+					-- xp reward [Only show if XP is the only reward (i.e., if none of the above are rewards)]
+					if not hasReward then
+						local xp = GetQuestLogRewardXP(quest.questId)
+						if xp > 0 then
+							hasReward = true
+							quest.reward.xp = xp
+							quest.sort = quest.sort > CONSTANTS.SORT_ORDER.XP and quest.sort or CONSTANTS.SORT_ORDER.XP
+							rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.XP
+							
+							if C("showXP") then quest.hide = false end
+						end
+					end
+					if BWQ_DEBUG and not hasReward and not HaveQuestData(quest.questId) then
 						print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questId, quest.title))
 					end
 					if not hasReward then needsRefresh = true end -- in most cases no reward means api returned incomplete data
@@ -1031,10 +1025,10 @@ local RetrieveWorldQuests = function(mapId)
 							quest.bounties[#quest.bounties + 1] = bounty.icon
 						end
 					end
-
 					local questType = {}
+
 					-- quest type filters
-					if quest.worldQuestType == CONSTANTS.WORLD_QUEST_TYPES.PETBATTLE then
+					if quest.worldQuestType == Enum.QuestTagType.PetBattle then
 						if C("showPetBattle") or (C("alwaysShowPetBattleFamilyFamiliar") and CONSTANTS.FAMILY_FAMILIAR_QUEST_IDS[quest.questId] ~= nil) then
 							quest.hide = false
 						else
@@ -1042,7 +1036,7 @@ local RetrieveWorldQuests = function(mapId)
 						end
 
 						quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[expansion], quest.questId)
-					elseif quest.worldQuestType == CONSTANTS.WORLD_QUEST_TYPES.PROFESSION then
+					elseif quest.worldQuestType == Enum.QuestTagType.Profession then
 						if C("showProfession") then
 
 							if quest.tagId == 119 then
@@ -1072,8 +1066,8 @@ local RetrieveWorldQuests = function(mapId)
 						else
 							quest.hide = true
 						end
-					elseif not C("showPvP") and quest.worldQuestType == CONSTANTS.WORLD_QUEST_TYPES.PVP then quest.hide = true
-					elseif not C("showDungeon") and quest.worldQuestType == CONSTANTS.WORLD_QUEST_TYPES.DUNGEON then quest.hide = true
+					elseif not C("showPvP") and quest.worldQuestType == Enum.QuestTagType.PvP then quest.hide = true
+					elseif not C("showDungeon") and quest.worldQuestType == Enum.QuestTagType.Dungeon then quest.hide = true
 					end
 
 					-- only show quest that are blue or above quality
@@ -1123,14 +1117,14 @@ local RetrieveWorldQuests = function(mapId)
 						(C("alwaysShowArgussianReach") and quest.factionId == 2170) then
 
 						-- pet battle override
-						if C("hidePetBattleBountyQuests") and not C("showPetBattle") and quest.worldQuestType == CONSTANTS.WORLD_QUEST_TYPES.PETBATTLE then
+						if C("hidePetBattleBountyQuests") and not C("showPetBattle") and quest.worldQuestType == Enum.QuestTagType.PetBattle then
 							quest.hide = true
 						else
 							quest.hide = false
 						end
 					end
 					-- don't filter epic quests based on setting
-					if C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == CONSTANTS.WORLD_QUEST_TYPES.RAID) then quest.hide = false end
+					if C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == Enum.QuestTagType.Raid) then quest.hide = false end
 
 					MAP_ZONES[expansion][mapId].quests[questId] = quest
 
@@ -1153,6 +1147,8 @@ local RetrieveWorldQuests = function(mapId)
 									BWQ.totalResources = BWQ.totalResources + quest.reward.resourceAmount
 								elseif rtype == CONSTANTS.REWARD_TYPES.LEGIONFALL_SUPPLIES and quest.reward.legionfallSuppliesAmount then
 									BWQ.totalLegionfallSupplies = BWQ.totalLegionfallSupplies + quest.reward.legionfallSuppliesAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.XP and quest.reward.xp then
+									BWQ.totalXP = BWQ.totalXP + quest.reward.xp
 								elseif rtype == CONSTANTS.REWARD_TYPES.HONOR and quest.reward.honor then
 									BWQ.totalHonor = BWQ.totalHonor + quest.reward.honor
 								elseif rtype == CONSTANTS.REWARD_TYPES.MONEY and quest.reward.money then
@@ -1229,6 +1225,22 @@ local RetrieveWorldQuests = function(mapId)
 								end
 							end
 						end
+					else
+						--[[
+						if BWQ_DEBUG then
+							print("-------")
+							print("[BWQ] Quest Hidden!")
+							print("[BWQ] -- Title: "..tostring(quest.title))
+							print("[BWQ] -- ID: "..tostring(quest.questId))
+							print("[BWQ] -- tagName: "..tostring(quest.tagName))
+							print("[BWQ] -- tagId: "..tostring(quest.tagId))
+							print("[BWQ] -- worldQuestType: "..tostring(quest.worldQuestType))
+							if (quest.factionId) then
+								print("[BWQ] -- faction: "..tostring(quest.faction).." (factionID: "..tostring(quest.factionId)..")")
+							end
+							print("-------")
+						end
+						]]
 					end
 				end
 			end
@@ -1554,6 +1566,7 @@ function BWQ:UpdateQuestData()
 	BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment = 0, 0, 0, 0
 	BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej = 0, 0, 0, 0, 0
 	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
+	BWQ.totalXP = 0
 
 	for mapId in next, MAP_ZONES[expansion] do
 		RetrieveWorldQuests(mapId)
@@ -1883,6 +1896,16 @@ function BWQ:UpdateBlock()
 
 			-- fill and format row
 			local rewardText = ""
+			if button.quest.reward.xp and button.quest.reward.xp > 0 then
+				rewardText = string.format(
+					"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
+					rewardText,
+					rewardText ~= "" and "   " or "", -- insert some space between rewards
+					"Interface\\Icons\\xp_icon",
+					button.quest.reward.xp,
+					XP
+				) 
+			end
 			if button.quest.reward.itemName then
 				local itemText = string.format(
 					"%s[%s%s]|r",
@@ -2082,6 +2105,7 @@ function BWQ:UpdateBlock()
 		if C("brokerShowGratefulOffering")    	and BWQ.totalGratefulOffering > 0   	then brokerString = string.format("%s|TInterface\\Icons\\inv_misc_ornatebox:16:16|t %d  ", brokerString, BWQ.totalGratefulOffering) end
 		if C("brokerShowResources")           	and BWQ.totalResources > 0          	then brokerString = string.format("%s|TInterface\\Icons\\inv_orderhall_orderresources:16:16|t %d  ", brokerString, BWQ.totalResources) end
 		if C("brokerShowLegionfallSupplies")  	and BWQ.totalLegionfallSupplies > 0 	then brokerString = string.format("%s|TInterface\\Icons\\inv_misc_summonable_boss_token:16:16|t %d  ", brokerString, BWQ.totalLegionfallSupplies) end
+		if C("brokerShowXP")               		and BWQ.totalXP > 0              		then brokerString = string.format("%s|TInterface\\Icons\\xp_icon:16:16|t %d  ", brokerString, BWQ.totalXP) end
 		if C("brokerShowHonor")               	and BWQ.totalHonor > 0              	then brokerString = string.format("%s|TInterface\\Icons\\Achievement_LegionPVPTier4:16:16|t %d  ", brokerString, BWQ.totalHonor) end
 		if C("brokerShowGold")                	and BWQ.totalGold > 0               	then brokerString = string.format("%s|TInterface\\GossipFrame\\auctioneerGossipIcon:16:16|t %d  ", brokerString, math.floor(BWQ.totalGold / 10000)) end
 		if C("brokerShowGear")                	and BWQ.totalGear > 0               	then brokerString = string.format("%s|TInterface\\Icons\\Inv_chest_plate_legionendgame_c_01:16:16|t %d  ", brokerString, BWQ.totalGear) end
@@ -2149,6 +2173,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  War Resources"):format("Interface\\Icons\\inv__faction_warresources"), check = "brokerShowWarResources" },
 				{ text = ("|T%1$s:16:16|t  Order Hall Resources"):format("Interface\\Icons\\inv_orderhall_orderresources"), check = "brokerShowResources" },
 				{ text = ("|T%1$s:16:16|t  Legionfall War Supplies"):format("Interface\\Icons\\inv_misc_summonable_boss_token"), check = "brokerShowLegionfallSupplies" },
+				{ text = ("|T%1$s:16:16|t  XP Only Quests"):format("Interface\\Icons\\xp_icon"), check = "brokerShowXP" },
 				{ text = ("|T%1$s:16:16|t  Honor"):format("Interface\\Icons\\Achievement_LegionPVPTier4"), check = "brokerShowHonor" },
 				{ text = ("|T%1$s:16:16|t  Gold"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "brokerShowGold" },
 				{ text = ("|T%1$s:16:16|t  Gear"):format("Interface\\Icons\\Inv_chest_plate_legionendgame_c_01"), check = "brokerShowGear" },
@@ -2193,6 +2218,7 @@ function BWQ:SetupConfigMenu()
 			}
 		},
 		{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "showBloodyTokens" },
+		{ text = ("|T%1$s:16:16|t  XP Only Quests"):format("Interface\\Icons\\xp_icon"), check = "showXP" },
 		{ text = ("|T%1$s:16:16|t  Honor"):format("Interface\\Icons\\Achievement_LegionPVPTier4"), check = "showHonor" },
 		{ text = ("|T%1$s:16:16|t  Low gold reward"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "showLowGold" },
 		{ text = ("|T%1$s:16:16|t  High gold reward"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "showHighGold" },

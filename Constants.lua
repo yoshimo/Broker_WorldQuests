@@ -18,6 +18,7 @@ CONSTANTS.MAPID_KUL_TIRAS = 876
 CONSTANTS.MAPID_DALARAN_BROKEN_ISLES = 627
 
 CONSTANTS.SORT_ORDER = {
+	XP = 9,
 	ARTIFACTPOWER = 8,
 	RESOURCES = 7,
 	HONOR = 6,
@@ -26,17 +27,6 @@ CONSTANTS.SORT_ORDER = {
 	ITEM = 3,
 	PROFESSION = 2,
 	MONEY = 1,
-}
-
-CONSTANTS.WORLD_QUEST_TYPES = {
-	PROFESSION = 1,
-	PVE = 2,
-	PVP = 3,
-	PETBATTLE = 4,
-	-- ?? = 5,
-	DUNGEON = 6,
-	INVASION = 7,
-	RAID = 8,
 }
 
 -- The name here should match the currency name in game (verified via Wowhead).  Some currencies are singular, some are plural.
@@ -84,6 +74,7 @@ CONSTANTS.REWARD_TYPES = {
 	THE_WEAVER = 38,
 	THE_GENERAL = 39,
 	THE_VIZIER = 40,
+	XP = 41,
 }
 
 CONSTANTS.QUEST_TYPES = {
@@ -394,3 +385,30 @@ CONSTANTS.PARAGON_FACTIONS = {
 }
 
 addon.CONSTANTS = CONSTANTS
+
+--[[  FOR REFERENCE 
+--------------------
+Name = "QuestTagType",
+	Fields =
+	{
+		{ Name = "Tag", Type = "QuestTagType", EnumValue = 0 },
+		{ Name = "Profession", Type = "QuestTagType", EnumValue = 1 },
+		{ Name = "Normal", Type = "QuestTagType", EnumValue = 2 },
+		{ Name = "PvP", Type = "QuestTagType", EnumValue = 3 },
+		{ Name = "PetBattle", Type = "QuestTagType", EnumValue = 4 },
+		{ Name = "Bounty", Type = "QuestTagType", EnumValue = 5 },
+		{ Name = "Dungeon", Type = "QuestTagType", EnumValue = 6 },
+		{ Name = "Invasion", Type = "QuestTagType", EnumValue = 7 },
+		{ Name = "Raid", Type = "QuestTagType", EnumValue = 8 },
+		{ Name = "Contribution", Type = "QuestTagType", EnumValue = 9 },
+		{ Name = "RatedReward", Type = "QuestTagType", EnumValue = 10 },
+		{ Name = "InvasionWrapper", Type = "QuestTagType", EnumValue = 11 },
+		{ Name = "FactionAssault", Type = "QuestTagType", EnumValue = 12 },
+		{ Name = "Islands", Type = "QuestTagType", EnumValue = 13 },
+		{ Name = "Threat", Type = "QuestTagType", EnumValue = 14 },
+		{ Name = "CovenantCalling", Type = "QuestTagType", EnumValue = 15 },
+		{ Name = "DragonRiderRacing", Type = "QuestTagType", EnumValue = 16 },
+		{ Name = "Capstone", Type = "QuestTagType", EnumValue = 17 },
+		{ Name = "WorldBoss", Type = "QuestTagType", EnumValue = 18 },
+	}
+]]

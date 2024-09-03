@@ -1,3 +1,15 @@
+### 11.0.2.13
+* Added support for world quests that only provide information regarding
+  an XP reward to the addon API. In other words, there are world quests that
+  have a line of blue text when you inspect it, "Awards a one-time Warband
+  reputation bonus", but the addon API provides no other information about it.
+  So, long story short, for these particular quests, the broker window will only
+  show how much XP it provides.
+* Began the process of cleaning up the source to be easier to read, consolidate 
+  local variables together, avoid using local variables that aren't needed, etc.
+  There will be a lot of line changes, but this (and future similar changes) will
+  not affect functionality unless it's described in this file.
+
 ### 11.0.2.12
 * Added support for The Weaver, The General, and The Vizier currencies
 
