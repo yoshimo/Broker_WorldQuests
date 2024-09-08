@@ -1,3 +1,9 @@
+### 11.0.2.14
+* Added new checkbox option (at the bottom of the list) to enable/disable
+  "Spew Debug Information".  This is intended for use by those working on the 
+  addon and should be unchecked for most users unless requested by a developer.
+*   
+
 ### 11.0.2.13
 * Added support for world quests that only provide information regarding
   an XP reward to the addon API. In other words, there are world quests that

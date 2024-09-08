@@ -9,7 +9,6 @@
 --
 --]]----
 
-local BWQ_DEBUG = false
 local _, addon = ...
 local CONSTANTS = addon.CONSTANTS
 local isHorde = UnitFactionGroup("player") == "Horde"
@@ -105,6 +104,7 @@ local defaultConfig = {
 	usePerCharacterSettings = false,
 	enableClickToOpenMap = false,
 	enableTomTomWaypointsOnClick = true,
+	spewDebugInfo = false,
 	alwaysShowBountyQuests = true,
 	alwaysShowEpicQuests = true,
 	onlyShowRareOrAbove = false,
@@ -635,7 +635,6 @@ upAnimation:SetOrder(2)
 mapTextures.animationGroup = animationGroup
 BWQ.mapTextures = mapTextures
 
-
 function BWQ:QueryZoneQuestCoordinates(mapId)
 	local quests = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	if quests then
@@ -689,8 +688,8 @@ end
 
 local lastUpdate, updateTries = 0, 0
 local needsRefresh = false
+local DebugRetrieveWQ = false
 local RetrieveWorldQuests = function(mapId)
-
 	local numQuests = 0
 	local currentTime = GetTime()
 	local questList = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
@@ -703,10 +702,19 @@ local RetrieveWorldQuests = function(mapId)
 
 		local timeLeft, questTagInfo, title, factionId
 		for i, q in ipairs(questList) do
-			--print(string.format("[BWQ] questList.%d (ID: %s) (Loc: %s, %s)", i, q.questId, q.x, q.y))   -- for debugging
+			if DebugRetrieveWQ then
+				print(string.format("[BWQ] questList.%d: ID: %s (mapId: %d)", i, tostring(q.questId), mapId))
+			end
 			if HaveQuestData(q.questId) and q.mapID == mapId then 
 				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
 				questTagInfo = C_QuestLog.GetQuestTagInfo(q.questId)
+
+				if DebugRetrieveWQ then
+					local _title, _factionId = C_TaskQuest.GetQuestInfoByQuestID(q.questId)
+					print(string.format("[BWQ] questList.%d: %s", i, _title))
+					if _factionId then print(string.format("[BWQ] questList.%d: faction: %d (%s)", i, _factionId, C_Reputation.GetFactionDataByID(_factionId).name)) end
+					if questTagInfo then print(string.format("[BWQ] questList.%d: WorldQuestType: %d", i, questTagInfo.worldQuestType)) end
+				end
 
 				if questTagInfo and questTagInfo.worldQuestType then
 					local questId = q.questId
@@ -991,7 +999,7 @@ local RetrieveWorldQuests = function(mapId)
 									quest.reward.TheVizierAmount = currency.amount
 									if C("showTheVizier") then quest.hide = false end																		
 								else 
-									if BWQ_DEBUG then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
+									if BWQcfg.spewDebugInfo then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
 								quest.reward.currencies[#quest.reward.currencies + 1] = currency
 
@@ -1015,7 +1023,7 @@ local RetrieveWorldQuests = function(mapId)
 							if C("showXP") then quest.hide = false end
 						end
 					end
-					if BWQ_DEBUG and not hasReward and not HaveQuestData(quest.questId) then
+					if BWQcfg.spewDebugInfo and not hasReward and not HaveQuestData(quest.questId) then
 						print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questId, quest.title))
 					end
 					if not hasReward then needsRefresh = true end -- in most cases no reward means api returned incomplete data
@@ -1227,7 +1235,7 @@ local RetrieveWorldQuests = function(mapId)
 						end
 					else
 						--[[
-						if BWQ_DEBUG then
+						if BWQcfg.spewDebugInfo then
 							print("-------")
 							print("[BWQ] Quest Hidden!")
 							print("[BWQ] -- Title: "..tostring(quest.title))
@@ -1243,6 +1251,9 @@ local RetrieveWorldQuests = function(mapId)
 						]]
 					end
 				end
+			end
+			if DebugRetrieveWQ then
+				print("[BWQ] ---")
 			end
 		end
 
@@ -1548,7 +1559,6 @@ function BWQ:UpdateFactionDisplayVisible()
 	end
 end
 
-
 function BWQ:UpdateInfoPanel()
 	BWQ:UpdateBountyData()
 	BWQ:UpdateParagonData()
@@ -1850,6 +1860,8 @@ function BWQ:UpdateBlock()
 				end)
 
 				button.titleFS = button:CreateFontString("BWQtitleFS", "OVERLAY", "SystemFont_Shadow_Med1")
+				--local font, size, flags = button.titleFS:GetFont()
+				--button.titleFS:SetFont(font, 50, flags)  -- Change font size to 50
 				button.titleFS:SetJustifyH("LEFT")
 				button.titleFS:SetTextColor(.9, .9, .9)
 				button.titleFS:SetWordWrap(false)
@@ -2359,7 +2371,9 @@ function BWQ:SetupConfigMenu()
 		table.insert(options, { text = "" })
 		table.insert(options, { text = "Add TomTom waypoint on row click", check = "enableTomTomWaypointsOnClick" })
 	end
-	
+	table.insert(options, { text = "" })
+	table.insert(options, { text = "Spew Debug Information", check = "spewDebugInfo" })
+
 	configMenu = CreateFrame("Frame", "BWQ_ConfigMenu")
 	configMenu.displayMode = "MENU"
 
