@@ -1,3 +1,5 @@
+local _, addon = ...
+local CONSTANTS = addon.CONSTANTS
 --[[----
 --
 -- Broker_WorldQuests
@@ -8,20 +10,6 @@
 -- Original Author: myno
 --
 --]]----
-
-local _, addon = ...
-local CONSTANTS = addon.CONSTANTS
-local isHorde = UnitFactionGroup("player") == "Horde"
-local expansion
-local warmodeEnabled = false
-local bounties = {}
-local questIds = {}
-local numQuestsTotal, totalWidth, offsetTop = 0, 0, -15
-local hasCollapsedQuests = false
-local showDownwards = false
-local blockYPos = 0
-local highlightedRow = true
-local hasUnlockedWorldQuests
 
 -- When adding zones to MAP_ZONES, be sure to also add the zoneID to MAP_ZONES_SORT immediately below
 -- The simplest way to get the MapID for the zone you are currently in is to enter "/dump C_Map.GetBestMapForUnit("player")"
@@ -275,117 +263,6 @@ local C = function(k)
 	end
 end
 
-local BWQ = CreateFrame("Frame", "Broker_WorldQuests", UIParent, "BackdropTemplate")
-BWQ:EnableMouse(true)
-BWQ:SetBackdrop({
-		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-		edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
-		tile = false,
-		tileSize = 0,
-		edgeSize = 2,
-		insets = { left = 0, right = 0, top = 0, bottom = 0 },
-	})
-BWQ:SetBackdropColor(0, 0, 0, .9)
-BWQ:SetBackdropBorderColor(0, 0, 0, 1)
-BWQ:SetClampedToScreen(true)
-BWQ:Hide()
-
-BWQ.buttonTheWarWithin = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
-BWQ.buttonTheWarWithin:SetSize(20, 15)
-BWQ.buttonTheWarWithin:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -146, -8)
-BWQ.buttonTheWarWithin:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = false, tileSize = 0, edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 }, })
-BWQ.buttonTheWarWithin:SetBackdropColor(0.1, 0.1, 0.1)
-BWQ.buttonTheWarWithin.texture = BWQ.buttonTheWarWithin:CreateTexture(nil, "OVERLAY")
-BWQ.buttonTheWarWithin.texture:SetPoint("TOPLEFT", 1, -1)
-BWQ.buttonTheWarWithin.texture:SetPoint("BOTTOMRIGHT", -1, 1)
-BWQ.buttonTheWarWithin.texture:SetTexture("Interface\\Calendar\\Holidays\\Calendar_WeekendTheWarWithinStart")		-- Use https://github.com/Marlamin/wow.tools.local to find textures
-BWQ.buttonTheWarWithin.texture:SetTexCoord(0.15, 0.55, 0.23, 0.47)
-
-BWQ.buttonDragonflight = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
-BWQ.buttonDragonflight:SetSize(20, 15)
-BWQ.buttonDragonflight:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -119, -8)
-BWQ.buttonDragonflight:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = false, tileSize = 0, edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 }, })
-BWQ.buttonDragonflight:SetBackdropColor(0.1, 0.1, 0.1)
-BWQ.buttonDragonflight.texture = BWQ.buttonDragonflight:CreateTexture(nil, "OVERLAY")
-BWQ.buttonDragonflight.texture:SetPoint("TOPLEFT", 1, -1)
-BWQ.buttonDragonflight.texture:SetPoint("BOTTOMRIGHT", -1, 1)
-BWQ.buttonDragonflight.texture:SetTexture("Interface\\Calendar\\Holidays\\Calendar_dragonflightstart")
-BWQ.buttonDragonflight.texture:SetTexCoord(0.15, 0.55, 0.23, 0.47)
-
-BWQ.buttonShadowlands = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
-BWQ.buttonShadowlands:SetSize(20, 15)
-BWQ.buttonShadowlands:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -92, -8)
-BWQ.buttonShadowlands:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = false, tileSize = 0, edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 }, })
-BWQ.buttonShadowlands:SetBackdropColor(0.1, 0.1, 0.1)
-BWQ.buttonShadowlands.texture = BWQ.buttonShadowlands:CreateTexture(nil, "OVERLAY")
-BWQ.buttonShadowlands.texture:SetPoint("TOPLEFT", 1, -1)
-BWQ.buttonShadowlands.texture:SetPoint("BOTTOMRIGHT", -1, 1)
-BWQ.buttonShadowlands.texture:SetTexture("Interface\\Calendar\\Holidays\\Calendar_WeekendShadowlandsStart")
-BWQ.buttonShadowlands.texture:SetTexCoord(0.15, 0.55, 0.23, 0.47)
-
-BWQ.buttonBFA = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
-BWQ.buttonBFA:SetSize(20, 15)
-BWQ.buttonBFA:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -65, -8)
-BWQ.buttonBFA:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = false, tileSize = 0, edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 }, })
-BWQ.buttonBFA:SetBackdropColor(0.1, 0.1, 0.1)
-BWQ.buttonBFA.texture = BWQ.buttonBFA:CreateTexture(nil, "OVERLAY")
-BWQ.buttonBFA.texture:SetPoint("TOPLEFT", 1, -1)
-BWQ.buttonBFA.texture:SetPoint("BOTTOMRIGHT", -1, 1)
-BWQ.buttonBFA.texture:SetTexture("Interface\\Calendar\\Holidays\\Calendar_WeekendBattleforAzerothStart")
-BWQ.buttonBFA.texture:SetTexCoord(0.15, 0.55, 0.23, 0.45)
-
-BWQ.buttonLegion = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
-BWQ.buttonLegion:SetSize(20, 15)
-BWQ.buttonLegion:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -38, -8)
-BWQ.buttonLegion:SetBackdrop({bgFile = "Interface\\ChatFrame\\ChatFrameBackground", tile = false, tileSize = 0, edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 }, })
-BWQ.buttonLegion:SetBackdropColor(0.1, 0.1, 0.1)
-BWQ.buttonLegion.texture = BWQ.buttonLegion:CreateTexture(nil, "OVERLAY")
-BWQ.buttonLegion.texture:SetPoint("TOPLEFT", 1, -1)
-BWQ.buttonLegion.texture:SetPoint("BOTTOMRIGHT", -1, 1)
-BWQ.buttonLegion.texture:SetTexture("Interface\\Calendar\\Holidays\\Calendar_WeekendLegionStart")
-BWQ.buttonLegion.texture:SetTexCoord(0.15, 0.55, 0.23, 0.47)
-
-BWQ.buttonTheWarWithin:SetScript("OnClick", function(self) BWQ:SwitchExpansion(CONSTANTS.EXPANSIONS.THEWARWITHIN) end)
-BWQ.buttonDragonflight:SetScript("OnClick", function(self) BWQ:SwitchExpansion(CONSTANTS.EXPANSIONS.DRAGONFLIGHT) end)
-BWQ.buttonShadowlands:SetScript("OnClick", function(self) BWQ:SwitchExpansion(CONSTANTS.EXPANSIONS.SHADOWLANDS) end)
-BWQ.buttonBFA:SetScript("OnClick", function(self) BWQ:SwitchExpansion(CONSTANTS.EXPANSIONS.BFA) end)
-BWQ.buttonLegion:SetScript("OnClick", function(self) BWQ:SwitchExpansion(CONSTANTS.EXPANSIONS.LEGION) end)
-
-BWQ.buttonSettings = CreateFrame("BUTTON", nil, BWQ, "BackdropTemplate")
-BWQ.buttonSettings:SetWidth(15)
-BWQ.buttonSettings:SetHeight(15)
-BWQ.buttonSettings:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -12, -8)
-BWQ.buttonSettings.texture = BWQ.buttonSettings:CreateTexture(nil, "BORDER")
-BWQ.buttonSettings.texture:SetAllPoints()
-BWQ.buttonSettings.texture:SetTexture("Interface\\WorldMap\\Gear_64.png")
-BWQ.buttonSettings.texture:SetTexCoord(0, 0.50, 0, 0.50)
-BWQ.buttonSettings.texture:SetVertexColor(1.0, 0.82, 0, 1.0)
-BWQ.buttonSettings:SetScript("OnClick", function(self) BWQ:OpenConfigMenu(self) end)
-
-local Block_OnLeave = function(self)
-	if not C("attachToWorldMap") or (C("attachToWorldMap") and not WorldMapFrame:IsShown()) then
-		if not BWQ:IsMouseOver() then
-			BWQ:Hide()
-		end
-	end
-end
-BWQ:SetScript("OnLeave", Block_OnLeave)
-
-BWQ.slider = CreateFrame("Slider", nil, BWQ, "BackdropTemplate")
-BWQ.slider:SetWidth(16)
-BWQ.slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-BWQ.slider:SetBackdrop( {
-	bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
-	--edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
-	edgeSize = 8, tile = true, tileSize = 8,
-	insets = { left=3, right=3, top=6, bottom=6 }
-} )
-BWQ.slider:SetValueStep(1)
-BWQ.slider:SetHeight(200)
-BWQ.slider:SetMinMaxValues( 0, 100 )
-BWQ.slider:SetValue(0)
-BWQ.slider:Hide()
-
 local CreateErrorFS = function()
 	BWQ.errorFS = BWQ:CreateFontString("BWQerrorFS", "OVERLAY", "SystemFont_Shadow_Med1")
 	BWQ.errorFS:SetJustifyH("CENTER")
@@ -393,37 +270,37 @@ local CreateErrorFS = function()
 end
 
 function BWQ:WorldQuestsUnlocked()
-	if not hasUnlockedWorldQuests then
-		if (expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN) then
-			hasUnlockedWorldQuests = C_QuestLog.IsQuestFlaggedCompleted(79573) -- See effect #1 under https://www.wowhead.com/spell=434027/world-quests-adventure-mode
-		elseif (expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT) then
-			_, _, _, hasUnlockedWorldQuests = GetAchievementInfo(16326)
-			if not hasUnlockedWorldQuests then
-				hasUnlockedWorldQuests = UnitLevel("player") >= 68 and C_QuestLog.IsQuestFlaggedCompleted(66221)
+	if not BWQ.hasUnlockedWorldQuests then
+		if (BWQ.expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN) then
+			BWQ.hasUnlockedWorldQuests = C_QuestLog.IsQuestFlaggedCompleted(79573) -- See effect #1 under https://www.wowhead.com/spell=434027/world-quests-adventure-mode
+		elseif (BWQ.expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT) then
+			_, _, _, BWQ.hasUnlockedWorldQuests = GetAchievementInfo(16326)
+			if not BWQ.hasUnlockedWorldQuests then
+				BWQ.hasUnlockedWorldQuests = UnitLevel("player") >= 68 and C_QuestLog.IsQuestFlaggedCompleted(66221)
 			end
 		else
-			hasUnlockedWorldQuests = (expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS and UnitLevel("player") >= 51 and C_QuestLog.IsQuestFlaggedCompleted(57559))
-				or (expansion == CONSTANTS.EXPANSIONS.BFA and UnitLevel("player") >= 50 and
+			BWQ.hasUnlockedWorldQuests = (BWQ.expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS and UnitLevel("player") >= 51 and C_QuestLog.IsQuestFlaggedCompleted(57559))
+				or (BWQ.expansion == CONSTANTS.EXPANSIONS.BFA and UnitLevel("player") >= 50 and
 					(C_QuestLog.IsQuestFlaggedCompleted(51916) or C_QuestLog.IsQuestFlaggedCompleted(52451) -- horde
 					or C_QuestLog.IsQuestFlaggedCompleted(51918) or C_QuestLog.IsQuestFlaggedCompleted(52450))) -- alliance
-				or (expansion == CONSTANTS.EXPANSIONS.LEGION and UnitLevel("player") >= 45 and
+				or (BWQ.expansion == CONSTANTS.EXPANSIONS.LEGION and UnitLevel("player") >= 45 and
 					(C_QuestLog.IsQuestFlaggedCompleted(43341) or C_QuestLog.IsQuestFlaggedCompleted(45727))) -- broken isles
 		end
 	end
 
-	if not hasUnlockedWorldQuests then
+	if not BWQ.hasUnlockedWorldQuests then
 		if not BWQ.errorFS then CreateErrorFS() end
 
 		local level, quest, errorText
-		if expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN then
+		if BWQ.expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN then
 			errorText = "You need to unlock The War Within World Quests\non one of your characters."
-		elseif expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT then
+		elseif BWQ.expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT then
 			errorText = "You need to unlock Dragonflight World Quests\non one of your characters."
-		elseif expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS then
+		elseif BWQ.expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS then
 			errorText = "You need to unlock Shadowlands World Quests\non one of your characters."
-		elseif expansion == CONSTANTS.EXPANSIONS.BFA then
+		elseif BWQ.expansion == CONSTANTS.EXPANSIONS.BFA then
 			level = "50"
-			quest = isHorde and "|cffffff00|Hquest:57559:-1|h[Uniting Zandalar]|h|r" or "|cffffff00|Hquest:51918:-1|h[Uniting Kul Tiras]|h|r"
+			quest = self.isHorde and "|cffffff00|Hquest:57559:-1|h[Uniting Zandalar]|h|r" or "|cffffff00|Hquest:51918:-1|h[Uniting Kul Tiras]|h|r"
 			errorText = ("You need to reach Level %s and complete the\nquest %s to unlock World Quests."):format(level, quest)
 		else -- legion
 			level = "45"
@@ -431,7 +308,7 @@ function BWQ:WorldQuestsUnlocked()
 			errorText = ("You need to reach Level %s and complete the\nquest %s to unlock World Quests."):format(level, quest)
 		end
 
-		BWQ:SetErrorFSPosition(offsetTop)
+		BWQ:SetErrorFSPosition(BWQ.offsetTop)
 		BWQ.errorFS:SetText(errorText)
 		BWQ:SetSize(BWQ.errorFS:GetStringWidth() + 20, BWQ.errorFS:GetStringHeight() + 45)
 		BWQ.errorFS:Show()
@@ -450,15 +327,15 @@ function BWQ:ShowNoWorldQuestsInfo()
 	if not BWQ.errorFS then CreateErrorFS() end
 
 	BWQ.errorFS:ClearAllPoints()
-	BWQ:SetErrorFSPosition(offsetTop - 10)
-	BWQ.errorFS:SetPoint("TOP", BWQ, "TOP", 0, offsetTop - 10)
+	BWQ:SetErrorFSPosition(BWQ.offsetTop - 10)
+	BWQ.errorFS:SetPoint("TOP", BWQ, "TOP", 0, BWQ.offsetTop - 10)
 
 	BWQ.errorFS:SetText("There are no world quests available that match your filter settings.")
 	BWQ.errorFS:Show()
 end
 
 function BWQ:SetErrorFSPosition(offsetTop)
-	if (expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS or expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT or expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN) then  -- TODO:  We are not supporting bounty quests for these expansions atm, so the ErrorFS position should be at the top of BWQ
+	if (BWQ.expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS or BWQ.expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT or BWQ.expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN) then  -- TODO:  We are not supporting bounty quests for these expansions atm, so the ErrorFS position should be at the top of BWQ
 		BWQ.errorFS:SetPoint("TOP", BWQ, "TOP", 0, offsetTop)
 	else
 		if BWQ.factionDisplay:IsShown() then
@@ -525,7 +402,7 @@ function BWQ:GetItemLevelValueForQuestId(questId)
 end
 
 function BWQ:ValueWithWarModeBonus(questId, value)
-	local multiplier = warmodeEnabled and 1.1 or 1
+	local multiplier = BWQ.warmodeEnabled and 1.1 or 1
 	return floor(value * multiplier + 0.5)
 end
 
@@ -639,7 +516,7 @@ function BWQ:QueryZoneQuestCoordinates(mapId)
 	local quests = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	if quests then
 		for _, v in next, quests do
-			local quest = MAP_ZONES[expansion][mapId].quests[v.questId] 
+			local quest = MAP_ZONES[BWQ.expansion][mapId].quests[v.questId] 
 			if quest then
 				quest.x = v.x
 				quest.y = v.y
@@ -693,12 +570,12 @@ local RetrieveWorldQuests = function(mapId)
 	local numQuests = 0
 	local currentTime = GetTime()
 	local questList = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
-	warmodeEnabled = C_PvP.IsWarModeDesired()
+	BWQ.warmodeEnabled = C_PvP.IsWarModeDesired()
 
 	-- quest object fields are: x, y, floor, numObjectives, questId, inProgress
 	if questList then
 		numQuests = 0
-		MAP_ZONES[expansion][mapId].questsSort = {}
+		MAP_ZONES[BWQ.expansion][mapId].questsSort = {}
 
 		local timeLeft, questTagInfo, title, factionId
 		for i, q in ipairs(questList) do
@@ -718,11 +595,11 @@ local RetrieveWorldQuests = function(mapId)
 
 				if questTagInfo and questTagInfo.worldQuestType then
 					local questId = q.questId
-					table.insert(MAP_ZONES[expansion][mapId].questsSort, questId)
-					local quest = MAP_ZONES[expansion][mapId].quests[questId] or {}
+					table.insert(MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
+					local quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
 
 					if not quest.timeAdded then
-						quest.wasSaved = questIds[questId] ~= nil
+						quest.wasSaved = BWQ.questIds[questId] ~= nil
 					end
 					quest.timeAdded = quest.timeAdded or currentTime
 					if quest.wasSaved or currentTime - quest.timeAdded > 900 then
@@ -770,6 +647,7 @@ local RetrieveWorldQuests = function(mapId)
 							quest.reward.itemQuality = quality
 							quest.reward.itemQuantity = quantity
 							quest.reward.itemName = itemName
+
 
 							--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s", quest.questId, quest.title, itemName, itemId, quantity))    -- for debugging
 							
@@ -1028,7 +906,7 @@ local RetrieveWorldQuests = function(mapId)
 					end
 					if not hasReward then needsRefresh = true end -- in most cases no reward means api returned incomplete data
 					
-					for _, bounty in ipairs(bounties) do
+					for _, bounty in ipairs(BWQ.bounties) do
 						if C_QuestLog.IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
 							quest.bounties[#quest.bounties + 1] = bounty.icon
 						end
@@ -1043,7 +921,7 @@ local RetrieveWorldQuests = function(mapId)
 							quest.hide = true
 						end
 
-						quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[expansion], quest.questId)
+						quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[BWQ.expansion], quest.questId)
 					elseif quest.worldQuestType == Enum.QuestTagType.Profession then
 						if C("showProfession") then
 
@@ -1134,7 +1012,7 @@ local RetrieveWorldQuests = function(mapId)
 					-- don't filter epic quests based on setting
 					if C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == Enum.QuestTagType.Raid) then quest.hide = false end
 
-					MAP_ZONES[expansion][mapId].quests[questId] = quest
+					MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
 
 					if not quest.hide then
 						numQuests = numQuests + 1
@@ -1258,12 +1136,12 @@ local RetrieveWorldQuests = function(mapId)
 		end
 
 		if C("sortByTimeRemaining") then
-			table.sort(MAP_ZONES[expansion][mapId].questsSort, function(a, b) return MAP_ZONES[expansion][mapId].quests[a].timeLeft < MAP_ZONES[expansion][mapId].quests[b].timeLeft end)
+			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
 		else -- reward type
-			table.sort(MAP_ZONES[expansion][mapId].questsSort, function(a, b) return MAP_ZONES[expansion][mapId].quests[a].sort > MAP_ZONES[expansion][mapId].quests[b].sort end)
+			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
 		end
 
-		MAP_ZONES[expansion][mapId].numQuests = numQuests
+		MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
 	end
 end
 
@@ -1271,21 +1149,21 @@ end
 BWQ.bountyCache = {}
 BWQ.bountyDisplay = CreateFrame("Frame", "BWQ_BountyDisplay", BWQ)
 function BWQ:UpdateBountyData()
-	if expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN then -- TODO: get map id for retrieving bounties
+	if BWQ.expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN then -- TODO: get map id for retrieving bounties
 		BWQ.bountyDisplay:Hide()
 		for i, item in pairs(BWQ.bountyCache) do
 			item.button:Hide()
 		end
 		return
 	end
-	if expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT then -- TODO: get map id for retrieving bounties
+	if BWQ.expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT then -- TODO: get map id for retrieving bounties
 		BWQ.bountyDisplay:Hide()
 		for i, item in pairs(BWQ.bountyCache) do
 			item.button:Hide()
 		end
 		return
 	end
-	if expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS then -- TODO: get map id for retrieving bounties
+	if BWQ.expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS then -- TODO: get map id for retrieving bounties
 		BWQ.bountyDisplay:Hide()
 		for i, item in pairs(BWQ.bountyCache) do
 			item.button:Hide()
@@ -1296,14 +1174,14 @@ function BWQ:UpdateBountyData()
 		item.button:Show()
 	end
 
-	bounties = C_QuestLog.GetBountiesForMapID(expansion == CONSTANTS.EXPANSIONS.BFA and CONSTANTS.MAPID_KUL_TIRAS or CONSTANTS.MAPID_DALARAN_BROKEN_ISLES) or {}
-	if #bounties == 0 then
+	BWQ.bounties = C_QuestLog.GetBountiesForMapID(BWQ.expansion == CONSTANTS.EXPANSIONS.BFA and CONSTANTS.MAPID_KUL_TIRAS or CONSTANTS.MAPID_DALARAN_BROKEN_ISLES) or {}
+	if #BWQ.bounties == 0 then
 		BWQ.bountyDisplay:Hide()
 		return
 	end
 
 	local bountyWidth = 0 -- added width of all items inside the bounty block
-	for bountyIndex, bounty in ipairs(bounties) do
+	for bountyIndex, bounty in ipairs(BWQ.bounties) do
 		local questIndex = C_QuestLog.GetLogIndexForQuestID(bounty.questID)
 		local title = C_QuestLog.GetTitleForLogIndex(questIndex)
 		local timeleft = C_TaskQuest.GetQuestTimeLeftMinutes(bounty.questID)
@@ -1354,8 +1232,8 @@ function BWQ:UpdateBountyData()
 	end
 
 	-- remove obsolete bounty entries (completed or disappeared)
-	if #bounties < #BWQ.bountyCache then
-		for i = #bounties + 1, #BWQ.bountyCache do
+	if #BWQ.bounties < #BWQ.bountyCache then
+		for i = #BWQ.bounties + 1, #BWQ.bountyCache do
 			BWQ.bountyCache[i].icon:Hide()
 			BWQ.bountyCache[i].text:Hide()
 			BWQ.bountyCache[i].button:Hide()
@@ -1364,11 +1242,11 @@ function BWQ:UpdateBountyData()
 	end
 
 	-- show if bounties available, otherwise hide the bounty block
-	if #bounties > 0 then
+	if #BWQ.bounties > 0 then
 		BWQ.bountyDisplay:Show()
 		BWQ.bountyDisplay:SetSize(bountyWidth, 30)
-		BWQ.bountyDisplay:SetPoint("TOP", BWQ, "TOP", 0, offsetTop)
-		offsetTop = offsetTop - 40
+		BWQ.bountyDisplay:SetPoint("TOP", BWQ, "TOP", 0, BWQ.offsetTop)
+		BWQ.offsetTop = BWQ.offsetTop - 40
 	else
 		BWQ.bountyDisplay:Hide()
 	end
@@ -1410,14 +1288,14 @@ local factionIncreaseString2 = FACTION_STANDING_INCREASED_ACH_BONUS:gsub("%%d", 
 local factionIncreaseString3 = FACTION_STANDING_INCREASED_GENERIC:gsub("%%s", "(.*)"):gsub(" %(%+.*%)" ,"")
 
 function BWQ:SetParagonFactionsByActiveExpansion()
-	if expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN then 
+	if BWQ.expansion == CONSTANTS.EXPANSIONS.THEWARWITHIN then 
 		paragonFactions = CONSTANTS.PARAGON_FACTIONS.thewarwithin
-	elseif expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT then 
+	elseif BWQ.expansion == CONSTANTS.EXPANSIONS.DRAGONFLIGHT then 
 		paragonFactions = CONSTANTS.PARAGON_FACTIONS.dragonflight
-	elseif expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS then 
+	elseif BWQ.expansion == CONSTANTS.EXPANSIONS.SHADOWLANDS then 
 		paragonFactions = CONSTANTS.PARAGON_FACTIONS.shadowlands
 	elseif
-		expansion == CONSTANTS.EXPANSIONS.BFA then paragonFactions = isHorde and CONSTANTS.PARAGON_FACTIONS.bfahorde or CONSTANTS.PARAGON_FACTIONS.bfaalliance
+		BWQ.expansion == CONSTANTS.EXPANSIONS.BFA then paragonFactions = self.isHorde and CONSTANTS.PARAGON_FACTIONS.bfahorde or CONSTANTS.PARAGON_FACTIONS.bfaalliance
 	else
 		paragonFactions = CONSTANTS.PARAGON_FACTIONS.legion
 	end
@@ -1543,8 +1421,8 @@ function BWQ:UpdateParagonData()
 	if (i > 0) then
 		BWQ.factionDisplay:Show()
 		BWQ.factionDisplay:SetSize(maxWidth, 20 * (rowIndex + 1))
-		BWQ.factionDisplay:SetPoint("TOP", BWQ, "TOP", 0, offsetTop)
-		offsetTop = offsetTop - 20 * (rowIndex + 1)
+		BWQ.factionDisplay:SetPoint("TOP", BWQ, "TOP", 0, BWQ.offsetTop)
+		BWQ.offsetTop = BWQ.offsetTop - 20 * (rowIndex + 1)
 	else
 		BWQ.factionDisplay:Hide()
 	end
@@ -1567,7 +1445,7 @@ end
 
 local originalMap, originalContinent, originalDungeonLevel
 function BWQ:UpdateQuestData()
-	questIds = BWQcache.questIds or {}
+	BWQ.questIds = BWQcache.questIds or {}
 	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies = 0, 0, 0, 0, 0, 0
 	BWQ.totalHonor, BWQ.totalGear, BWQ.totalHerbalism, BWQ.totalMining, BWQ.totalFishing, BWQ.totalSkinning, BWQ.totalBloodOfSargeras = 0, 0, 0, 0, 0, 0, 0
 	BWQ.totalWakeningEssences, BWQ.totalMarkOfHonor, BWQ.totalPrismaticManapearl, BWQ.totalCyphersOfTheFirstOnes, BWQ.totalGratefulOffering = 0, 0, 0, 0, 0
@@ -1578,32 +1456,32 @@ function BWQ:UpdateQuestData()
 	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
 	BWQ.totalXP = 0
 
-	for mapId in next, MAP_ZONES[expansion] do
+	for mapId in next, MAP_ZONES[BWQ.expansion] do
 		RetrieveWorldQuests(mapId)
 	end
 
-	numQuestsTotal = 0
-	hasCollapsedQuests = false
-	for mapId in next, MAP_ZONES[expansion] do
-		local num = MAP_ZONES[expansion][mapId].numQuests
+	BWQ.numQuestsTotal = 0
+	BWQ.hasCollapsedQuests = false
+	for mapId in next, MAP_ZONES[BWQ.expansion] do
+		local num = MAP_ZONES[BWQ.expansion][mapId].numQuests
 		if num > 0 then
 			if not C("collapsedZones")[mapId] then
-				numQuestsTotal = numQuestsTotal + num
+				BWQ.numQuestsTotal = BWQ.numQuestsTotal + num
 			else
-				hasCollapsedQuests = true
+				BWQ.hasCollapsedQuests = true
 			end
 		end
 	end
 
 	-- save quests to saved vars to check new status after reload/relog
-	if numQuestsTotal ~= 0 then
-		questIds = {}
-		for mapId in next, MAP_ZONES[expansion] do
-			for _, questId in next, MAP_ZONES[expansion][mapId].questsSort do
-				questIds[questId] = true
+	if BWQ.numQuestsTotal ~= 0 then
+		BWQ.questIds = {}
+		for mapId in next, MAP_ZONES[BWQ.expansion] do
+			for _, questId in next, MAP_ZONES[BWQ.expansion][mapId].questsSort do
+				BWQ.questIds[questId] = true
 			end
 		end
-		BWQcache.questIds = questIds
+		BWQcache.questIds = BWQ.questIds
 	end
 
 	if needsRefresh and updateTries < 3 then
@@ -1615,15 +1493,15 @@ end
 function BWQ:RenderRows()
 	local screenHeight = UIParent:GetHeight()
 	local availableHeight = 0
-	if showDownwards then availableHeight = screenHeight - (screenHeight - blockYPos) - 30
-	else availableHeight = screenHeight - blockYPos - 30 end
+	if BWQ.showDownwards then availableHeight = screenHeight - (screenHeight - BWQ.blockYPos) - 30
+	else availableHeight = screenHeight - BWQ.blockYPos - 30 end
 
 	local ROW_HEIGHT = -16
-	local maxEntries = math.floor((availableHeight + offsetTop - 10) / ( -1 * ROW_HEIGHT ))
+	local maxEntries = math.floor((availableHeight + BWQ.offsetTop - 10) / ( -1 * ROW_HEIGHT ))
 
-	local numEntries = numQuestsTotal
-	for mapId in next, MAP_ZONES[expansion] do
-		if MAP_ZONES[expansion][mapId].numQuests ~= 0 then
+	local numEntries = BWQ.numQuestsTotal
+	for mapId in next, MAP_ZONES[BWQ.expansion] do
+		if MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
 			numEntries = numEntries + 1
 		end
 	end
@@ -1634,68 +1512,68 @@ function BWQ:RenderRows()
 		BWQ.slider:SetMinMaxValues(0, numEntries - 1 - maxEntries)
 	else
 		BWQ.slider:Show()
-		BWQ.slider:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -5, offsetTop)
+		BWQ.slider:SetPoint("TOPRIGHT", BWQ, "TOPRIGHT", -5, BWQ.offsetTop)
 		BWQ.slider:SetHeight((ROW_HEIGHT * -1) * (maxEntries + 1))
 		BWQ.slider:SetMinMaxValues(0, numEntries - 1 - maxEntries)
 	end
 
 	-- all quests filtered or all done (haha.)
-	if numQuestsTotal == 0 and not hasCollapsedQuests then
+	if BWQ.numQuestsTotal == 0 and not BWQ.hasCollapsedQuests then
 		BWQ:ShowNoWorldQuestsInfo()
-		BWQ:SetHeight((offsetTop * -1) + 10 + 30)
+		BWQ:SetHeight((BWQ.offsetTop * -1) + 10 + 30)
 	else
 		if BWQ.errorFS then BWQ.errorFS:Hide() end
-		BWQ:SetHeight((offsetTop * -1) + 10 + (ROW_HEIGHT * -1) * (maxEntries + 1))
+		BWQ:SetHeight((BWQ.offsetTop * -1) + 10 + (ROW_HEIGHT * -1) * (maxEntries + 1))
 	end
 
 	local sliderval = math.floor(BWQ.slider:GetValue())
 	local rowIndex = 0
 	local rowInViewIndex = 0
-	for _, mapId in next, MAP_ZONES_SORT[expansion] do
+	for _, mapId in next, MAP_ZONES_SORT[BWQ.expansion] do
 		
 		local collapsed = C("collapsedZones")[mapId]
 
-		if MAP_ZONES[expansion][mapId].numQuests == 0 or rowIndex < sliderval or rowIndex > sliderval + maxEntries then
+		if MAP_ZONES[BWQ.expansion][mapId].numQuests == 0 or rowIndex < sliderval or rowIndex > sliderval + maxEntries then
 
-			MAP_ZONES[expansion][mapId].zoneSep.fs:Hide()
-			MAP_ZONES[expansion][mapId].zoneSep.texture:Hide()
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Hide()
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Hide()
 		else
 
-			MAP_ZONES[expansion][mapId].zoneSep.fs:Show()
-			MAP_ZONES[expansion][mapId].zoneSep.fs:SetPoint("TOP", BWQ, "TOP", 15 + (totalWidth / -2) + (MAP_ZONES[expansion][mapId].zoneSep.fs:GetStringWidth() / 2), offsetTop + ROW_HEIGHT * rowInViewIndex - 2)
-			MAP_ZONES[expansion][mapId].zoneSep.texture:Show()
-			MAP_ZONES[expansion][mapId].zoneSep.texture:SetPoint("TOP", BWQ, "TOP", 5, offsetTop + ROW_HEIGHT * rowInViewIndex - 3)
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Show()
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetPoint("TOP", BWQ, "TOP", 15 + (BWQ.totalWidth / -2) + (MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:GetStringWidth() / 2), BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 2)
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Show()
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetPoint("TOP", BWQ, "TOP", 5, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 3)
 
-			MAP_ZONES[expansion][mapId].zoneSep.collapse:Show()
-			MAP_ZONES[expansion][mapId].zoneSep.collapse:SetAllPoints(MAP_ZONES[expansion][mapId].zoneSep.fs)
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:Show()
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:SetAllPoints(MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs)
 			local color = not collapsed and {0.9, 0.8, 0} or {0.3, 0.3, 0.3}
-			MAP_ZONES[expansion][mapId].zoneSep.fs:SetTextColor(unpack(color))
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetTextColor(unpack(color))
 			
 			rowInViewIndex = rowInViewIndex + 1
 		end
 
-		if MAP_ZONES[expansion][mapId].numQuests ~= 0 then
+		if MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
 			rowIndex = rowIndex + 1 -- count up from row with zone name
 		end
 
-		highlightedRow = true
+		BWQ.highlightedRow = true
 		local buttonIndex = 1
-		for _, button in ipairs(MAP_ZONES[expansion][mapId].buttons) do
-			if not button.quest.hide and not collapsed and buttonIndex <= MAP_ZONES[expansion][mapId].numQuests then
+		for _, button in ipairs(MAP_ZONES[BWQ.expansion][mapId].buttons) do
+			if not button.quest.hide and not collapsed and buttonIndex <= MAP_ZONES[BWQ.expansion][mapId].numQuests then
 				if rowIndex < sliderval  or rowIndex > sliderval + maxEntries then
 					button:Hide()
 				else
 					button:Show()
-					button:SetPoint("TOP", BWQ, "TOP", 0, offsetTop + ROW_HEIGHT * rowInViewIndex)
+					button:SetPoint("TOP", BWQ, "TOP", 0, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex)
 					rowInViewIndex = rowInViewIndex + 1
 
-					if highlightedRow then
+					if BWQ.highlightedRow then
 						button.rowHighlight:Show()
 					else
 						button.rowHighlight:Hide()
 					end
 				end
-				highlightedRow = not highlightedRow
+				BWQ.highlightedRow = not BWQ.highlightedRow
 				buttonIndex = buttonIndex + 1
 				rowIndex = rowIndex + 1
 			else
@@ -1706,7 +1584,7 @@ function BWQ:RenderRows()
 end
 
 function BWQ:SwitchExpansion(expac)
-	expansion = expac
+	BWQ.expansion = expac
 	if not C("usePerCharacterSettings") then
 		BWQcfg["expansion"] = expac
 	else
@@ -1721,14 +1599,14 @@ function BWQ:SwitchExpansion(expac)
 	BWQ.buttonLegion:SetAlpha(expac == CONSTANTS.EXPANSIONS.LEGION and 1 or 0.4)
 
 	BWQ:HideRowsOfInactiveExpansions()
-	hasUnlockedWorldQuests = false
+	BWQ.hasUnlockedWorldQuests = false
 	updateTries = 0
 	BWQ:UpdateBlock()
 end 
 
 function BWQ:HideRowsOfInactiveExpansions()
 	for k, expac in next, MAP_ZONES do
-		if k ~= expansion then
+		if k ~= BWQ.expansion then
 			for mapId, v in next, expac do
 				if v.zoneSep then
 					v.zoneSep.fs:Hide()
@@ -1755,11 +1633,11 @@ function BWQ:RunUpdate()
 end
 
 function BWQ:UpdateBlock()
-	offsetTop = -35 -- initial padding from top
+	BWQ.offsetTop = -35 -- initial padding from top
 	
 	BWQ:UpdateInfoPanel()
 	if not BWQ:WorldQuestsUnlocked() then
-		BWQ:SetHeight(offsetTop * -1 + 20 + 30) -- padding + errorFS height
+		BWQ:SetHeight(BWQ.offsetTop * -1 + 20 + 30) -- padding + errorFS height
 		BWQ:SetWidth(math.max(BWQ.factionDisplay:GetWidth(), BWQ.errorFS:GetWidth()) + 20)
 		return
 	end
@@ -1773,17 +1651,17 @@ function BWQ:UpdateBlock()
 	end
 
 	local titleMaxWidth, bountyMaxWidth, factionMaxWidth, rewardMaxWidth, timeLeftMaxWidth = 0, 0, 0, 0, 0
-	for mapId in next, MAP_ZONES[expansion] do
+	for mapId in next, MAP_ZONES[BWQ.expansion] do
 		local buttonIndex = 1
 
-		if not MAP_ZONES[expansion][mapId].zoneSep then
+		if not MAP_ZONES[BWQ.expansion][mapId].zoneSep then
 			local zoneSep = {
 				fs = BWQ:CreateFontString("BWQzoneNameFS", "OVERLAY", "SystemFont_Shadow_Med1"),
 				texture = BWQ:CreateTexture(),
 				collapse = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
 			}
-			local faction = MAP_ZONES[expansion][mapId].faction
-			local zoneText = MAP_ZONES[expansion][mapId].name
+			local faction = MAP_ZONES[BWQ.expansion][mapId].faction
+			local zoneText = MAP_ZONES[BWQ.expansion][mapId].name
 			if faction then
 				local factionIcon = faction == CONSTANTS.FACTIONS.HORDE and "Interface\\Icons\\inv_misc_tournaments_banner_orc" or "Interface\\Icons\\inv_misc_tournaments_banner_human"
 				zoneText = ("%2$s   |T%1$s:12:12|t"):format(factionIcon, zoneText)
@@ -1801,15 +1679,15 @@ function BWQ:UpdateBlock()
 			zoneSep.texture:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-OnlineDivider")
 			zoneSep.texture:SetHeight(8)
 
-			MAP_ZONES[expansion][mapId].zoneSep = zoneSep
+			MAP_ZONES[BWQ.expansion][mapId].zoneSep = zoneSep
 		end
 
 		if not C("collapsedZones")[mapId] then 
 
-		for _, questId in next, MAP_ZONES[expansion][mapId].questsSort do
+		for _, questId in next, MAP_ZONES[BWQ.expansion][mapId].questsSort do
 
 			local button
-			if buttonIndex > #MAP_ZONES[expansion][mapId].buttons then
+			if buttonIndex > #MAP_ZONES[BWQ.expansion][mapId].buttons then
 
 				button = CreateFrame("Button", nil, BWQ)
 				button:RegisterForClicks("AnyUp")
@@ -1826,17 +1704,10 @@ function BWQ:UpdateBlock()
 				button.rowHighlight:SetAlpha(0.05)
 				button.rowHighlight:SetAllPoints(button)
 
-				button:SetScript("OnLeave", function(self)
-					Block_OnLeave()
-					button.highlight:SetAlpha(0)
-				end)
-				button:SetScript("OnEnter", function(self)
-					button.highlight:SetAlpha(1)
-				end)
+				button:SetScript("OnLeave", function()				BWQ:Block_OnLeave()				button.highlight:SetAlpha(0)			end)
+				button:SetScript("OnEnter", function(self)			button.highlight:SetAlpha(1)											end)
 
-				button:SetScript("OnClick", function(self)
-					Row_OnClick(button)
-				end)
+				button:SetScript("OnClick", function(self)			Row_OnClick(button)														end)
 
 				button.icon = button:CreateTexture()
 				button.icon:SetTexture("Interface\\QUESTFRAME\\WorldQuest")
@@ -1844,20 +1715,9 @@ function BWQ:UpdateBlock()
 
 				-- create font strings
 				button.title = CreateFrame("Button", nil, button)
-				button.title:SetScript("OnClick", function(self)
-					Row_OnClick(button)
-				end)
-				button.title:SetScript("OnEnter", function(self)
-					button.highlight:SetAlpha(1)
-
-					ShowQuestObjectiveTooltip(button)
-				end)
-				button.title:SetScript("OnLeave", function(self)
-					button.highlight:SetAlpha(0)
-
-					tip:Hide()
-					Block_OnLeave()
-				end)
+				button.title:SetScript("OnClick", function(self)	Row_OnClick(button)														end)
+				button.title:SetScript("OnEnter", function(self)	button.highlight:SetAlpha(1)	ShowQuestObjectiveTooltip(button)		end)
+				button.title:SetScript("OnLeave", function()		button.highlight:SetAlpha(0)	tip:Hide()		BWQ:Block_OnLeave()		end)
 
 				button.titleFS = button:CreateFontString("BWQtitleFS", "OVERLAY", "SystemFont_Shadow_Med1")
 				--local font, size, flags = button.titleFS:GetFont()
@@ -1880,9 +1740,7 @@ function BWQ:UpdateBlock()
 				button.factionFS:SetWordWrap(false)
 
 				button.reward = CreateFrame("Button", nil, button)
-				button.reward:SetScript("OnClick", function(self)
-					Row_OnClick(button)
-				end)
+				button.reward:SetScript("OnClick", function(self)	Row_OnClick(button)														end)
 
 				button.rewardFS = button.reward:CreateFontString("BWQrewardFS", "OVERLAY", "SystemFont_Shadow_Med1")
 				button.rewardFS:SetJustifyH("LEFT")
@@ -1894,13 +1752,13 @@ function BWQ:UpdateBlock()
 				button.timeLeftFS:SetTextColor(.9, .9, .9)
 				button.timeLeftFS:SetWordWrap(false)
 
-				MAP_ZONES[expansion][mapId].buttons[buttonIndex] = button
+				MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex] = button
 			else
-				button = MAP_ZONES[expansion][mapId].buttons[buttonIndex]
+				button = MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex]
 			end
 
 			button.mapId = mapId
-			button.quest = MAP_ZONES[expansion][mapId].quests[questId]
+			button.quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId]
 
 			button.questID = button.quest.questId
 			button.worldQuest = true
@@ -1950,22 +1808,22 @@ function BWQ:UpdateBlock()
 					ShowQuestLogItemTooltip(button)
 				end)
 
-				button.reward:SetScript("OnLeave", function(self)
+				button.reward:SetScript("OnLeave", function()
 					button.highlight:SetAlpha(0)
 
 					self:UnregisterEvent("MODIFIER_STATE_CHANGED")
 					tip:Hide()
-					Block_OnLeave()
+					BWQ:Block_OnLeave()
 				end)
 			else
 				button.reward:SetScript("OnEnter", function(self)
 					button.highlight:SetAlpha(1)
 				end)
-				button.reward:SetScript("OnLeave", function(self)
+				button.reward:SetScript("OnLeave", function()
 					button.highlight:SetAlpha(0)
 
 					tip:Hide()
-					Block_OnLeave()
+					BWQ:Block_OnLeave()
 				end)
 			end
 			if button.quest.reward.honor and button.quest.reward.honor > 0 then
@@ -2072,44 +1930,44 @@ function BWQ:UpdateBlock()
 	rewardMaxWidth = rewardMaxWidth < 225 and 225 or rewardMaxWidth > 375 and 375 or rewardMaxWidth
 	factionMaxWidth = C("hideFactionColumn") and 0 or factionMaxWidth < 100 and 100 or factionMaxWidth
 	timeLeftMaxWidth = 65
-	totalWidth = titleMaxWidth + bountyMaxWidth + factionMaxWidth + rewardMaxWidth + timeLeftMaxWidth + 80
+	BWQ.totalWidth = titleMaxWidth + bountyMaxWidth + factionMaxWidth + rewardMaxWidth + timeLeftMaxWidth + 80
 
 	local bountyBoardWidth = BWQ.bountyDisplay:GetWidth()
 	local factionDisplayWidth = BWQ.factionDisplay:GetWidth()
 	local infoPanelWidth = bountyBoardWidth > factionDisplayWidth and bountyBoardWidth or factionDisplayWidth
-	if totalWidth < infoPanelWidth then
-		local diff = infoPanelWidth - totalWidth
-		totalWidth = infoPanelWidth
+	if BWQ.totalWidth < infoPanelWidth then
+		local diff = infoPanelWidth - BWQ.totalWidth
+		BWQ.totalWidth = infoPanelWidth
 		rewardMaxWidth = rewardMaxWidth + diff
 	end
 
-	for mapId in next, MAP_ZONES[expansion] do
-		for i = 1, #MAP_ZONES[expansion][mapId].buttons do
-			if not MAP_ZONES[expansion][mapId].buttons[i].quest.hide then -- dont care about the hidden ones
-				MAP_ZONES[expansion][mapId].buttons[i]:SetHeight(15)
-				MAP_ZONES[expansion][mapId].buttons[i]:SetWidth(totalWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].title:SetWidth(titleMaxWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].titleFS:SetWidth(titleMaxWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].bountyFS:SetWidth(bountyMaxWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].factionFS:SetWidth(factionMaxWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].reward:SetWidth(rewardMaxWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].rewardFS:SetWidth(rewardMaxWidth)
-				MAP_ZONES[expansion][mapId].buttons[i].timeLeftFS:SetWidth(timeLeftMaxWidth)
+	for mapId in next, MAP_ZONES[BWQ.expansion] do
+		for i = 1, #MAP_ZONES[BWQ.expansion][mapId].buttons do
+			if not MAP_ZONES[BWQ.expansion][mapId].buttons[i].quest.hide then -- dont care about the hidden ones
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i]:SetHeight(15)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i]:SetWidth(BWQ.totalWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].title:SetWidth(titleMaxWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].titleFS:SetWidth(titleMaxWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].bountyFS:SetWidth(bountyMaxWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].factionFS:SetWidth(factionMaxWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].reward:SetWidth(rewardMaxWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].rewardFS:SetWidth(rewardMaxWidth)
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i].timeLeftFS:SetWidth(timeLeftMaxWidth)
 			else
-				MAP_ZONES[expansion][mapId].buttons[i]:Hide()
+				MAP_ZONES[BWQ.expansion][mapId].buttons[i]:Hide()
 			end
 		end
-		MAP_ZONES[expansion][mapId].zoneSep.texture:SetWidth(totalWidth + 20)
+		MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetWidth(BWQ.totalWidth + 20)
 	end
 
-	totalWidth = totalWidth + 20
-	BWQ:SetWidth(totalWidth)
+	BWQ.totalWidth = BWQ.totalWidth + 20
+	BWQ:SetWidth(BWQ.totalWidth)
 
 	if C("showTotalsInBrokerText") then
 		local brokerString = ""
 		if C("brokerShowPolishedPetCharms")    	and BWQ.totalPolishedPetCharms > 0  	then brokerString = string.format("%s|TInterface\\Icons\\inv_currency_petbattle:16:16|t %d  ", brokerString, BWQ.totalPolishedPetCharms) end
 		if C("brokerShowAP")                  	and BWQ.totalArtifactPower > 0      	then brokerString = string.format("%s|TInterface\\Icons\\inv_smallazeriteshard:16:16|t %s  ", brokerString, AbbreviateNumber(BWQ.totalArtifactPower)) end
-		if C("brokerShowServiceMedals")       	and BWQ.totalServiceMedals > 0      	then brokerString = string.format("%s|T%s:16:16|t %s  ", brokerString, isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal", BWQ.totalServiceMedals) end
+		if C("brokerShowServiceMedals")       	and BWQ.totalServiceMedals > 0      	then brokerString = string.format("%s|T%s:16:16|t %s  ", brokerString, self.isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal", BWQ.totalServiceMedals) end
 		if C("brokerShowWakeningEssences")    	and BWQ.totalWakeningEssences > 0   	then brokerString = string.format("%s|TInterface\\Icons\\achievement_dungeon_ulduar80_25man:16:16|t %s  ", brokerString, BWQ.totalWakeningEssences) end
 		if C("brokerShowWarResources")        	and BWQ.totalWarResources > 0       	then brokerString = string.format("%s|TInterface\\Icons\\inv__faction_warresources:16:16|t %d  ", brokerString, BWQ.totalWarResources) end
 		if C("brokerShowPrismaticManapearl")  	and BWQ.totalPrismaticManapearl > 0 	then brokerString = string.format("%s|TInterface\\Icons\\Inv_misc_enchantedpearlf:16:16|t %d  ", brokerString, BWQ.totalPrismaticManapearl) end
@@ -2177,7 +2035,7 @@ function BWQ:SetupConfigMenu()
 		{ text = "Show total counts in broker text", check = "showTotalsInBrokerText", submenu = {
 				{ text = ("|T%1$s:16:16|t  Polished Pet Charms"):format("Interface\\Icons\\inv_currency_petbattle"), check = "brokerShowPolishedPetCharms" },
 				{ text = ("|T%1$s:16:16|t  Artifact Power"):format("Interface\\Icons\\inv_smallazeriteshard"), check = "brokerShowAP" },
-				{ text = ("|T%1$s:16:16|t  Service Medals"):format(isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal"), check = "brokerShowServiceMedals" },
+				{ text = ("|T%1$s:16:16|t  Service Medals"):format(self.isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal"), check = "brokerShowServiceMedals" },
 				{ text = ("|T%1$s:16:16|t  Wakening Essences"):format("Interface\\Icons\\achievement_dungeon_ulduar80_25man"), check = "brokerShowWakeningEssences" },
 				{ text = ("|T%1$s:16:16|t  Prismatic Manapearls"):format("Interface\\Icons\\Inv_misc_enchantedpearlf"), check = "brokerShowPrismaticManapearl" },
 				{ text = ("|T%1$s:16:16|t  Cyphers of the First Ones"):format("Interface\\Icons\\inv_trinket_progenitorraid_02_blue"), check = "brokerShowCyphersOfTheFirstOnes" },
@@ -2275,7 +2133,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Reputation Tokens"):format("Interface\\Icons\\inv_scroll_11"), check = "showBFAReputation" },
 				{ text = ("|T%1$s:16:16|t  War Resources"):format("Interface\\Icons\\inv__faction_warresources"), check = "showWarResources" },
 				{ text = ("|T%1$s:16:16|t  Azerite"):format("Interface\\Icons\\inv_smallazeriteshard"), check = "showArtifactPower" },
-				{ text = ("|T%1$s:16:16|t  Service Medals"):format(isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal"), check = "showBFAServiceMedals" },
+				{ text = ("|T%1$s:16:16|t  Service Medals"):format(self.isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal"), check = "showBFAServiceMedals" },
 				{ text = ("|T%1$s:16:16|t  Prismatic Manapearl"):format("Interface\\Icons\\Inv_misc_enchantedpearlf"), check = "showPrismaticManapearl" },
 			}
 		},
@@ -2399,9 +2257,9 @@ function BWQ:SetupConfigMenu()
 		end
 
 		if var == "expansion" then
-			expansion = C("expansion")
+			BWQ.expansion = C("expansion")
 			BWQ:HideRowsOfInactiveExpansions()
-			hasUnlockedWorldQuests = false
+			BWQ.hasUnlockedWorldQuests = false
 		end
 
 		if var == "hideFactionParagonBars" then
@@ -2484,10 +2342,10 @@ function BWQ:AttachToBlock(anchor)
 	if not C("attachToWorldMap") or (C("attachToWorldMap") and not WorldMapFrame:IsShown()) then
 		CloseDropDownMenus()
 
-		blockYPos = select(2, anchor:GetCenter())
-		showDownwards = blockYPos > UIParent:GetHeight() / 2
+		BWQ.blockYPos = select(2, anchor:GetCenter())
+		BWQ.showDownwards = BWQ.blockYPos > UIParent:GetHeight() / 2
 		BWQ:ClearAllPoints()
-		BWQ:SetPoint(showDownwards and "TOP" or "BOTTOM", anchor, showDownwards and "BOTTOM" or "TOP", 0, 0)
+		BWQ:SetPoint(BWQ.showDownwards and "TOP" or "BOTTOM", anchor, BWQ.showDownwards and "BOTTOM" or "TOP", 0, 0)
 		BWQ:SetFrameStrata("DIALOG")
 		BWQ:Show()
 
@@ -2635,7 +2493,7 @@ BWQ.WorldQuestsBroker = ldb:NewDataObject("WorldQuests", {
 			BWQ:AttachToBlock(self)
 		end
 	end,
-	OnLeave = Block_OnLeave,
+	OnLeave = function() BWQ:Block_OnLeave() end,
 	OnClick = function(self, button)
 		if button == "LeftButton" then
 			if C("showOnClick") then
@@ -2644,7 +2502,7 @@ BWQ.WorldQuestsBroker = ldb:NewDataObject("WorldQuests", {
 				BWQ:RunUpdate()
 			end
 		elseif button == "RightButton" then
-			Block_OnLeave()
+			BWQ:Block_OnLeave()
 			BWQ:OpenConfigMenu(self)
 		end
 	end,
