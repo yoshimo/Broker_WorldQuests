@@ -110,6 +110,7 @@ CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
 	[142] = "worldquest-icon-burninglegion",
 	[259] = isHorde and "worldquest-icon-horde" or "worldquest-icon-alliance",
 	[260] = isHorde and "worldquest-icon-horde" or "worldquest-icon-alliance",
+	[281] = "worldquest-icon-race",
 }
 
 CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE = {
