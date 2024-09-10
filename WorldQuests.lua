@@ -207,6 +207,7 @@ local defaultConfig = {
 		showProfessionArchaeology = true,
 		showProfessionFishing = true,
 	showDungeon = true,
+	showDragonRiderRacing = true,
 	showPvP = true,
 	hideFactionColumn = false,
 	hideFactionParagonBars = false,
@@ -479,6 +480,16 @@ local ShowQuestLogItemTooltip = function(button)
 	end
 end
 
+local ShowWorldQuestPOITooltip = function(button,poi)
+    tip:SetOwner(button, "ANCHOR_CURSOR")
+    tip:SetText(poi.name)
+	if button.quest.LockedWQ then
+		local description = string.format("You must complete %d more %s in %s to unlock '%s', which rewards |5 %s.", button.quest.LockedWQ_questsRemaining, button.quest.LockedWQ_questsRemaining > 1 and "WQs" or "WQ", button.quest.LockedWQ_zone, poi.name, button.quest.reward.itemLink)
+    	tip:AddLine(description, 1, 1, 1, true)
+	end
+    tip:Show()
+end
+
 -- super track map ping
 local mapTextures = CreateFrame("Frame", "BWQ_MapTextures", WorldMapFrame:GetCanvas())
 mapTextures:SetSize(400,400)
@@ -562,7 +573,6 @@ local Row_OnClick = function(row)
 	end
 end
 
-
 local lastUpdate, updateTries = 0, 0
 local needsRefresh = false
 local DebugRetrieveWQ = false
@@ -572,7 +582,6 @@ local RetrieveWorldQuests = function(mapId)
 	local questList = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	BWQ.warmodeEnabled = C_PvP.IsWarModeDesired()
 
-	-- quest object fields are: x, y, floor, numObjectives, questId, inProgress
 	if questList then
 		numQuests = 0
 		MAP_ZONES[BWQ.expansion][mapId].questsSort = {}
@@ -619,7 +628,6 @@ local RetrieveWorldQuests = function(mapId)
 
 					-- C_QuestLog.GetQuestTagInfo fields
 					quest.tagId = questTagInfo.tagID
-					quest.tagName = questTagInfo.tagName
 					quest.worldQuestType = questTagInfo.worldQuestType
 					quest.quality = questTagInfo.quality
 					quest.isElite = questTagInfo.isElite
@@ -954,6 +962,7 @@ local RetrieveWorldQuests = function(mapId)
 						end
 					elseif not C("showPvP") and quest.worldQuestType == Enum.QuestTagType.PvP then quest.hide = true
 					elseif not C("showDungeon") and quest.worldQuestType == Enum.QuestTagType.Dungeon then quest.hide = true
+					elseif not C("showDragonRiderRacing") and quest.worldQuestType == Enum.QuestTagType.DragonRiderRacing then quest.hide = true
 					end
 
 					-- only show quest that are blue or above quality
@@ -1132,6 +1141,110 @@ local RetrieveWorldQuests = function(mapId)
 			end
 			if DebugRetrieveWQ then
 				print("[BWQ] ---")
+			end
+		end
+
+		if C("sortByTimeRemaining") then
+			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
+		else -- reward type
+			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
+		end
+
+		MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
+	end
+
+	-- Retrieve locked world quests (i.e., capstone quests), which are handled differently
+	local areaPoiIDs = C_AreaPoiInfo.GetAreaPOIForMap(mapId)
+    if areaPoiIDs then
+        for i, poiID in ipairs(areaPoiIDs) do
+            local poi = C_AreaPoiInfo.GetAreaPOIInfo(mapId,poiID)
+            if poi and string.find(poi.name, "Special Assignment") then		-- TODO:  Are there other "names" that should be showing other than "Special Assignment" quests?
+				local questId = poi.areaPoiID
+				table.insert(MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
+				local quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
+				quest.title = poi.name
+				quest.LockedWQ = true
+				if not quest.timeAdded then
+					quest.wasSaved = BWQ.questIds[questId] ~= nil
+				end
+				quest.timeAdded = quest.timeAdded or currentTime
+				if quest.wasSaved or currentTime - quest.timeAdded > 900 then
+					quest.isNew = false
+				else
+					quest.isNew = true
+				end
+				quest.hide = false											-- TODO:  Add option to hide locked world quests ...always showing them for now.
+				quest.sort = 0
+				quest.questId = questId
+				quest.numObjectives = 0										-- Not used
+				quest.xFlight = poi.position.x
+				quest.yFlight = poi.position.x
+				quest.tagId = -1
+				quest.worldQuestType = Enum.QuestTagType.Capstone			-- TODO: all locked WQs are currently capstone types.  (Not sure if this is even needed to be set in this context?)
+				quest.quality = Enum.WorldQuestQuality.Common				-- Set to 'Common' so that the quest title is white.
+				quest.isElite = true										-- TODO: Any reason not to set these locked quests as 'elite'?
+				quest.factionId = poi.factionID
+				if factionId then
+					quest.faction = C_Reputation.GetFactionDataByID(factionId).name
+				end
+				quest.bounties = {}
+				quest.reward = {}
+				local rewardType = {}
+				local hasReward = false
+				quest.isMissingAchievementCriteria = false					-- TODO:  set this properly?  Right now just setting to false as a default.
+				quest.poi = poi
+
+				-- Go through widgets to get reward and time remaining information
+				if not poi.tooltipWidgetSet then
+					quest.hide = true
+				else
+					local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(poi.tooltipWidgetSet)
+					if widgets then
+						for j, widget in pairs(widgets) do
+							if widget.widgetType == Enum.UIWidgetVisualizationType.TextWithState then
+								local widgetInfo = C_UIWidgetManager.GetTextWithStateWidgetVisualizationInfo(widget.widgetID)
+								if widgetInfo then
+									if string.find(widgetInfo.text, "Time Left:") then
+										local timeLeftStr = string.match(widgetInfo.text, "Time Left:%s*(.+)")
+
+										-- Note that WoW uses escape codes for singular/plural type things like this, which will not show up
+										-- with print().  To see them, you have to convert the string to a table, then use DevTools_Dump() -- for example: local tmp = { stringToDump }    DevTools_Dump(tmp)
+										-- See also:  https://warcraft.wiki.gg/wiki/UI_escape_sequences#Plural
+										local days = string.match(timeLeftStr, "(%d+)%s*|4Day:Days;")
+										local hours = string.match(timeLeftStr, "(%d+)%s*|4Hour:Hours;")
+										days = days and tonumber(days) or 0				-- Convert to numbers, default to 0 if not found
+										hours = hours and tonumber(hours) or 0			-- Convert to numbers, default to 0 if not found
+										local totalMinutes = (days * 24 * 60) + (hours * 60)
+										quest.timeLeft = totalMinutes
+										quest.timeLeftString = timeLeftStr
+									elseif string.find(widgetInfo.text, "Complete") then
+										local quests, zone = string.match(widgetInfo.text, "Complete (%d+) |4world quest:world quests; in ?(.-) to unlock")
+										if string.find(zone,"the") then
+											zone = string.match(zone, "^the%s*(.+)")    -- remove the word "the" if it's the first word in the string and lowercase.
+										end
+										quest.LockedWQ_questsRemaining = quests and tonumber(quests) or 0
+										quest.LockedWQ_zone = zone or ""
+									end
+								end
+							elseif widget.widgetType == Enum.UIWidgetVisualizationType.ItemDisplay then
+								local widgetInfo = C_UIWidgetManager.GetItemDisplayVisualizationInfo(widget.widgetID)
+								if widgetInfo then
+									local itemName, itemLink, itemQuality, itemLevel, _, itemType, itemSubType, itemStackCount = C_Item.GetItemInfo(widgetInfo.itemInfo.itemID)  -- https://warcraft.wiki.gg/wiki/API_C_Item.GetItemInfo
+									hasReward = true
+									quest.reward.itemTexture = poi.atlasName
+									quest.reward.itemId = widgetInfo.itemInfo.itemID
+									quest.reward.itemQuality = itemQuality
+									quest.reward.itemQuantity = itemStackCount
+									quest.reward.itemName = itemName
+									quest.reward.itemLink = itemLink
+								end 
+							end
+						end
+					end
+				end
+
+				MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+				numQuests = numQuests + 1
 			end
 		end
 
@@ -1683,254 +1796,280 @@ function BWQ:UpdateBlock()
 		end
 
 		if not C("collapsedZones")[mapId] then 
+			for _, questId in next, MAP_ZONES[BWQ.expansion][mapId].questsSort do
+				local button
+				if buttonIndex > #MAP_ZONES[BWQ.expansion][mapId].buttons then
 
-		for _, questId in next, MAP_ZONES[BWQ.expansion][mapId].questsSort do
+					button = CreateFrame("Button", nil, BWQ)
+					button:RegisterForClicks("AnyUp")
 
-			local button
-			if buttonIndex > #MAP_ZONES[BWQ.expansion][mapId].buttons then
+					button.highlight = button:CreateTexture()
+					button.highlight:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+					button.highlight:SetBlendMode("ADD")
+					button.highlight:SetAlpha(0)
+					button.highlight:SetAllPoints(button)
 
-				button = CreateFrame("Button", nil, BWQ)
-				button:RegisterForClicks("AnyUp")
+					button.rowHighlight = button:CreateTexture()
+					button.rowHighlight:SetTexture("Interface\\Buttons\\WHITE8x8")
+					button.rowHighlight:SetBlendMode("ADD")
+					button.rowHighlight:SetAlpha(0.05)
+					button.rowHighlight:SetAllPoints(button)
 
-				button.highlight = button:CreateTexture()
-				button.highlight:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
-				button.highlight:SetBlendMode("ADD")
-				button.highlight:SetAlpha(0)
-				button.highlight:SetAllPoints(button)
+					button:SetScript("OnLeave", function()				BWQ:Block_OnLeave()				button.highlight:SetAlpha(0)			end)
+					button:SetScript("OnEnter", function(self)			button.highlight:SetAlpha(1)											end)
 
-				button.rowHighlight = button:CreateTexture()
-				button.rowHighlight:SetTexture("Interface\\Buttons\\WHITE8x8")
-				button.rowHighlight:SetBlendMode("ADD")
-				button.rowHighlight:SetAlpha(0.05)
-				button.rowHighlight:SetAllPoints(button)
+					button:SetScript("OnClick", function(self)			Row_OnClick(button)														end)
 
-				button:SetScript("OnLeave", function()				BWQ:Block_OnLeave()				button.highlight:SetAlpha(0)			end)
-				button:SetScript("OnEnter", function(self)			button.highlight:SetAlpha(1)											end)
+					button.icon = button:CreateTexture()
+					button.icon:SetTexture("Interface\\QUESTFRAME\\WorldQuest")
+					button.icon:SetSize(12, 12)
 
-				button:SetScript("OnClick", function(self)			Row_OnClick(button)														end)
+					-- create font strings
+					button.title = CreateFrame("Button", nil, button)
+					button.title:SetScript("OnClick", function(self)	Row_OnClick(button)														end)
+					button.title:SetScript("OnEnter", function(self)	button.highlight:SetAlpha(1)	ShowQuestObjectiveTooltip(button)		end)
+					button.title:SetScript("OnLeave", function()		button.highlight:SetAlpha(0)	tip:Hide()		BWQ:Block_OnLeave()		end)
 
-				button.icon = button:CreateTexture()
-				button.icon:SetTexture("Interface\\QUESTFRAME\\WorldQuest")
-				button.icon:SetSize(12, 12)
+					button.titleFS = button:CreateFontString("BWQtitleFS", "OVERLAY", "SystemFont_Shadow_Med1")
+					--local font, size, flags = button.titleFS:GetFont()
+					--button.titleFS:SetFont(font, 50, flags)  -- Change font size to 50
+					button.titleFS:SetJustifyH("LEFT")
+					button.titleFS:SetTextColor(.9, .9, .9)
+					button.titleFS:SetWordWrap(false)
 
-				-- create font strings
-				button.title = CreateFrame("Button", nil, button)
-				button.title:SetScript("OnClick", function(self)	Row_OnClick(button)														end)
-				button.title:SetScript("OnEnter", function(self)	button.highlight:SetAlpha(1)	ShowQuestObjectiveTooltip(button)		end)
-				button.title:SetScript("OnLeave", function()		button.highlight:SetAlpha(0)	tip:Hide()		BWQ:Block_OnLeave()		end)
+					button.track = button:CreateTexture()
+					button.track:SetTexture("Interface\\COMMON\\FavoritesIcon")
+					button.track:SetSize(24, 24)
 
-				button.titleFS = button:CreateFontString("BWQtitleFS", "OVERLAY", "SystemFont_Shadow_Med1")
-				--local font, size, flags = button.titleFS:GetFont()
-				--button.titleFS:SetFont(font, 50, flags)  -- Change font size to 50
-				button.titleFS:SetJustifyH("LEFT")
-				button.titleFS:SetTextColor(.9, .9, .9)
-				button.titleFS:SetWordWrap(false)
+					button.bountyFS = button:CreateFontString("BWQbountyFS", "OVERLAY", "SystemFont_Shadow_Med1")
+					button.bountyFS:SetJustifyH("LEFT")
+					button.bountyFS:SetWordWrap(false)
 
-				button.track = button:CreateTexture()
-				button.track:SetTexture("Interface\\COMMON\\FavoritesIcon")
-				button.track:SetSize(24, 24)
+					button.factionFS = button:CreateFontString("BWQfactionFS", "OVERLAY", "SystemFont_Shadow_Med1")
+					button.factionFS:SetJustifyH("LEFT")
+					button.factionFS:SetTextColor(.9, .9, .9)
+					button.factionFS:SetWordWrap(false)
 
-				button.bountyFS = button:CreateFontString("BWQbountyFS", "OVERLAY", "SystemFont_Shadow_Med1")
-				button.bountyFS:SetJustifyH("LEFT")
-				button.bountyFS:SetWordWrap(false)
+					button.reward = CreateFrame("Button", nil, button)
+					button.reward:SetScript("OnClick", function(self)	Row_OnClick(button)														end)
 
-				button.factionFS = button:CreateFontString("BWQfactionFS", "OVERLAY", "SystemFont_Shadow_Med1")
-				button.factionFS:SetJustifyH("LEFT")
-				button.factionFS:SetTextColor(.9, .9, .9)
-				button.factionFS:SetWordWrap(false)
+					button.rewardFS = button.reward:CreateFontString("BWQrewardFS", "OVERLAY", "SystemFont_Shadow_Med1")
+					button.rewardFS:SetJustifyH("LEFT")
+					button.rewardFS:SetTextColor(.9, .9, .9)
+					button.rewardFS:SetWordWrap(false)
 
-				button.reward = CreateFrame("Button", nil, button)
-				button.reward:SetScript("OnClick", function(self)	Row_OnClick(button)														end)
+					button.timeLeftFS = button:CreateFontString("BWQtimeLeftFS", "OVERLAY", "SystemFont_Shadow_Med1")
+					button.timeLeftFS:SetJustifyH("LEFT")
+					button.timeLeftFS:SetTextColor(.9, .9, .9)
+					button.timeLeftFS:SetWordWrap(false)
 
-				button.rewardFS = button.reward:CreateFontString("BWQrewardFS", "OVERLAY", "SystemFont_Shadow_Med1")
-				button.rewardFS:SetJustifyH("LEFT")
-				button.rewardFS:SetTextColor(.9, .9, .9)
-				button.rewardFS:SetWordWrap(false)
+					MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex] = button
+				else
+					button = MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex]
+				end
 
-				button.timeLeftFS = button:CreateFontString("BWQtimeLeftFS", "OVERLAY", "SystemFont_Shadow_Med1")
-				button.timeLeftFS:SetJustifyH("LEFT")
-				button.timeLeftFS:SetTextColor(.9, .9, .9)
-				button.timeLeftFS:SetWordWrap(false)
+				button.mapId = mapId
+				button.quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId]
+				button.questID = button.quest.questId
+				button.worldQuest = true
+				button.numObjectives = button.quest.numObjectives
 
-				MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex] = button
-			else
-				button = MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex]
-			end
+				-- fill and format row
+				local rewardText = ""
+				if button.quest.LockedWQ then
+					-- To find Atlas textures such as the "padlock" below.  Use the /tav command (Texture Atlas Viewer addon).
+					rewardText = string.format(
+						"|cnWARNING_FONT_COLOR:|A:%s:14:14|a Complete %d more %s in %s|r",
+						"Garr_LockedBuilding",
+						button.quest.LockedWQ_questsRemaining and button.quest.LockedWQ_questsRemaining or "",
+						button.quest.LockedWQ_questsRemaining > 1 and "WQs" or "WQ",
+						button.quest.LockedWQ_zone and button.quest.LockedWQ_zone or "")
+					button.reward:SetScript("OnEvent", function(self, event)
+						if event == "MODIFIER_STATE_CHANGED" then
+							if button.reward:IsMouseOver() and button.reward:IsShown() then
+								ShowWorldQuestPOITooltip(button, button.quest.poi)
+							else
+								button.reward:UnregisterEvent("MODIFIER_STATE_CHANGED")
+							end
+						end
+					end)
+					button.reward:SetScript("OnEnter", function(self)
+						button.highlight:SetAlpha(1)
+						self:RegisterEvent("MODIFIER_STATE_CHANGED")
+						ShowWorldQuestPOITooltip(button, button.quest.poi)
+					end)
+					button.reward:SetScript("OnLeave", function()
+						button.highlight:SetAlpha(0)
+						self:UnregisterEvent("MODIFIER_STATE_CHANGED")
+						tip:Hide()
+						BWQ:Block_OnLeave()
+					end)
+				else
+					if button.quest.reward.xp and button.quest.reward.xp > 0 then
+						rewardText = string.format(
+							"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
+							rewardText,
+							rewardText ~= "" and "   " or "", -- insert some space between rewards
+							"Interface\\Icons\\xp_icon",
+							button.quest.reward.xp,
+							XP
+						) 
+					end
+					if button.quest.reward.itemName then
+						local itemText = string.format(
+							"%s[%s%s]|r",
+							ITEM_QUALITY_COLORS[button.quest.reward.itemQuality].hex,
+							button.quest.reward.realItemLevel and (button.quest.reward.realItemLevel .. " ") or "",
+							button.quest.reward.itemName
+						)
+						rewardText = string.format(
+							"|T%s$s:14:14|t %s%s",
+							button.quest.reward.itemTexture,
+							button.quest.reward.itemQuantity > 1 and button.quest.reward.itemQuantity .. "x " or "",
+							itemText
+						)
+						button.reward:SetScript("OnEvent", function(self, event)
+							if event == "MODIFIER_STATE_CHANGED" then
+								if button.reward:IsMouseOver() and button.reward:IsShown() then
+									ShowQuestLogItemTooltip(button)
+								else
+									button.reward:UnregisterEvent("MODIFIER_STATE_CHANGED")
+								end
+							end
+						end)
+						button.reward:SetScript("OnEnter", function(self)
+							button.highlight:SetAlpha(1)
+							self:RegisterEvent("MODIFIER_STATE_CHANGED")
 
-			button.mapId = mapId
-			button.quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId]
-
-			button.questID = button.quest.questId
-			button.worldQuest = true
-			button.numObjectives = button.quest.numObjectives
-
-			-- fill and format row
-			local rewardText = ""
-			if button.quest.reward.xp and button.quest.reward.xp > 0 then
-				rewardText = string.format(
-					"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
-					rewardText,
-					rewardText ~= "" and "   " or "", -- insert some space between rewards
-					"Interface\\Icons\\xp_icon",
-					button.quest.reward.xp,
-					XP
-				) 
-			end
-			if button.quest.reward.itemName then
-				local itemText = string.format(
-					"%s[%s%s]|r",
-					ITEM_QUALITY_COLORS[button.quest.reward.itemQuality].hex,
-					button.quest.reward.realItemLevel and (button.quest.reward.realItemLevel .. " ") or "",
-					button.quest.reward.itemName
-				)
-
-				rewardText = string.format(
-					"|T%s$s:14:14|t %s%s",
-					button.quest.reward.itemTexture,
-					button.quest.reward.itemQuantity > 1 and button.quest.reward.itemQuantity .. "x " or "",
-					itemText
-				)
-
-				button.reward:SetScript("OnEvent", function(self, event)
-					if event == "MODIFIER_STATE_CHANGED" then
-						if button.reward:IsMouseOver() and button.reward:IsShown() then
 							ShowQuestLogItemTooltip(button)
-						else
-							button.reward:UnregisterEvent("MODIFIER_STATE_CHANGED")
+						end)
+						button.reward:SetScript("OnLeave", function()
+							button.highlight:SetAlpha(0)
+
+							self:UnregisterEvent("MODIFIER_STATE_CHANGED")
+							tip:Hide()
+							BWQ:Block_OnLeave()
+						end)
+					else
+						button.reward:SetScript("OnEnter", function(self)
+							button.highlight:SetAlpha(1)
+						end)
+						button.reward:SetScript("OnLeave", function()
+							button.highlight:SetAlpha(0)
+
+							tip:Hide()
+							BWQ:Block_OnLeave()
+						end)
+					end
+					if button.quest.reward.honor and button.quest.reward.honor > 0 then
+						rewardText = string.format(
+							"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
+							rewardText,
+							rewardText ~= "" and "   " or "", -- insert some space between rewards
+							"Interface\\Icons\\Achievement_LegionPVPTier4",
+							button.quest.reward.honor,
+							HONOR
+						) 
+					end
+					if button.quest.reward.money and button.quest.reward.money > 0 then
+						local moneyText = GetCoinTextureString(button.quest.reward.money)
+						rewardText = string.format(
+							"%s%s%s",
+							rewardText,
+							rewardText ~= "" and "   " or "", -- insert some space between rewards
+							moneyText
+						)
+					end
+					if button.quest.reward.currencies then
+						for _, currency in next, button.quest.reward.currencies do
+							local currencyText = string.format("|T%1$s:14:14|t %s", currency.texture, currency.name)
+							rewardText = string.format(
+								"%s%s%s",
+								rewardText,
+								rewardText ~= "" and "   " or "", -- insert some space between rewards
+								currencyText
+							)
+							-- Replace "Reputation" with "Rep." to shorten strings
+							rewardText = rewardText:gsub("Reputation", "Rep.")
 						end
 					end
-				end)
-
-				button.reward:SetScript("OnEnter", function(self)
-					button.highlight:SetAlpha(1)
-					self:RegisterEvent("MODIFIER_STATE_CHANGED")
-
-					ShowQuestLogItemTooltip(button)
-				end)
-
-				button.reward:SetScript("OnLeave", function()
-					button.highlight:SetAlpha(0)
-
-					self:UnregisterEvent("MODIFIER_STATE_CHANGED")
-					tip:Hide()
-					BWQ:Block_OnLeave()
-				end)
-			else
-				button.reward:SetScript("OnEnter", function(self)
-					button.highlight:SetAlpha(1)
-				end)
-				button.reward:SetScript("OnLeave", function()
-					button.highlight:SetAlpha(0)
-
-					tip:Hide()
-					BWQ:Block_OnLeave()
-				end)
-			end
-			if button.quest.reward.honor and button.quest.reward.honor > 0 then
-				rewardText = string.format(
-					"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
-					rewardText,
-					rewardText ~= "" and "   " or "", -- insert some space between rewards
-					"Interface\\Icons\\Achievement_LegionPVPTier4",
-					button.quest.reward.honor,
-					HONOR
-				) 
-			end
-			if button.quest.reward.money and button.quest.reward.money > 0 then
-				local moneyText = GetCoinTextureString(button.quest.reward.money)
-				rewardText = string.format(
-					"%s%s%s",
-					rewardText,
-					rewardText ~= "" and "   " or "", -- insert some space between rewards
-					moneyText
-				)
-			end
-
-			if button.quest.reward.currencies then
-				for _, currency in next, button.quest.reward.currencies do
-					local currencyText = string.format("|T%1$s:14:14|t %s", currency.texture, currency.name)
-					rewardText = string.format(
-						"%s%s%s",
-						rewardText,
-						rewardText ~= "" and "   " or "", -- insert some space between rewards
-						currencyText
-					)
-					-- Replace "Reputation" with "Rep." to shorten strings
-					rewardText = rewardText:gsub("Reputation", "Rep.")
 				end
-			end
 
-			-- if button.quest.tagId == 136 or button.quest.tagId == 111 or button.quest.tagId == 112 then
-			--button.icon:SetTexCoord(.81, .84, .68, .79) -- skull tex coords
-			if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
-				button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId], true)
-				button.icon:SetAlpha(1)
-			else
-				button.icon:SetAlpha(0)
-			end
-			button.icon:SetSize(12, 12)
+				-- if button.quest.tagId == 136 or button.quest.tagId == 111 or button.quest.tagId == 112 then
+				--button.icon:SetTexCoord(.81, .84, .68, .79) -- skull tex coords
+				if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
+					button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId], true)
+					button.icon:SetAlpha(1)
+				else
+					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 and button.quest.tagId ~= 109 then	-- 109 is just your standard world quest
+						print(string.format("[BWQ] Unhandled Quest TagId: %d (%s)", button.quest.tagId, button.quest.title))
+					end
+					button.icon:SetAlpha(0)
+				end
+				button.icon:SetSize(12, 12)
 
-			button.titleFS:SetText(string.format("%s%s%s|r",
-				button.quest.isNew and "|cffe5cc80NEW|r  " or "",
-				button.quest.isMissingAchievementCriteria and "|cff1EFF00" or WORLD_QUEST_QUALITY_COLORS[button.quest.quality].hex,
-				button.quest.title
-			))
-			--local titleWidth = button.titleFS:GetStringWidth()
-			--if titleWidth > titleMaxWidth then titleMaxWidth = titleWidth end
+				-- Set the first cell of the row (the quest title/name)
+				button.titleFS:SetText(string.format("%s%s%s|r",
+					button.quest.isNew and "|cffe5cc80NEW|r  " or "",
+					button.quest.isMissingAchievementCriteria and "|cff1EFF00" or WORLD_QUEST_QUALITY_COLORS[button.quest.quality].hex,
+					button.quest.title
+				))
+				--local titleWidth = button.titleFS:GetStringWidth()
+				--if titleWidth > titleMaxWidth then titleMaxWidth = titleWidth end
 
-			if C_QuestLog.GetQuestWatchType(button.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == button.quest.questId then
-				button.track:Show()
-			else
-				button.track:Hide()
-			end
+				if C_QuestLog.GetQuestWatchType(button.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == button.quest.questId then
+					button.track:Show()
+				else
+					button.track:Hide()
+				end
 
-			local bountyText = ""
-			for _, bountyIcon in ipairs(button.quest.bounties) do
-				bountyText = string.format("%s |T%s$s:14:14|t", bountyText, bountyIcon)
-			end
-			button.bountyFS:SetText(bountyText)
-			local bountyWidth = button.bountyFS:GetStringWidth()
-			if bountyWidth > bountyMaxWidth then bountyMaxWidth = bountyWidth end
+				local bountyText = ""
+				for _, bountyIcon in ipairs(button.quest.bounties) do
+					bountyText = string.format("%s |T%s$s:14:14|t", bountyText, bountyIcon)
+				end
+				button.bountyFS:SetText(bountyText)
+				local bountyWidth = button.bountyFS:GetStringWidth()
+				if bountyWidth > bountyMaxWidth then bountyMaxWidth = bountyWidth end
 
-			if not C("hideFactionColumn") then
-				button.factionFS:SetText(button.quest.factionID)
-				local factionWidth = button.factionFS:GetStringWidth()
-				if factionWidth > factionMaxWidth then factionMaxWidth = factionWidth end
-			else
-				button.factionFS:SetText("")
-			end
+				if not C("hideFactionColumn") then
+					button.factionFS:SetText(button.quest.factionID)
+					local factionWidth = button.factionFS:GetStringWidth()
+					if factionWidth > factionMaxWidth then factionMaxWidth = factionWidth end
+				else
+					button.factionFS:SetText("")
+				end
 
-			button.timeLeftFS:SetText(FormatTimeLeftString(button.quest.timeLeft))
-			--local timeLeftWidth = button.factionFS:GetStringWidth()
-			--if timeLeftWidth > timeLeftMaxWidth then timeLeftMaxWidth = timeLeftWidth end
+				button.timeLeftFS:SetText(FormatTimeLeftString(button.quest.timeLeft))
+				--local timeLeftWidth = button.factionFS:GetStringWidth()
+				--if timeLeftWidth > timeLeftMaxWidth then timeLeftMaxWidth = timeLeftWidth end
 
-			button.rewardFS:SetText(rewardText)
+				button.rewardFS:SetText(rewardText)
 
-			local rewardWidth = button.rewardFS:GetStringWidth()
-			if rewardWidth > rewardMaxWidth then rewardMaxWidth = rewardWidth end
-			button.reward:SetHeight(button.rewardFS:GetStringHeight())
-			button.title:SetHeight(button.titleFS:GetStringHeight())
+				local rewardWidth = button.rewardFS:GetStringWidth()
+				if rewardWidth > rewardMaxWidth then rewardMaxWidth = rewardWidth end
+				button.reward:SetHeight(button.rewardFS:GetStringHeight())
+				button.title:SetHeight(button.titleFS:GetStringHeight())
 
-			button.icon:SetPoint("LEFT", button, "LEFT", 5, 0)
-			button.titleFS:SetPoint("LEFT", button.icon, "RIGHT", 5, 0)
-			button.title:SetPoint("LEFT", button.titleFS, "LEFT", 0, 0)
-			button.rewardFS:SetPoint("LEFT", button.titleFS, "RIGHT", 10, 0)
-			button.reward:SetPoint("LEFT", button.rewardFS, "LEFT", 0, 0)
-			button.track:SetPoint("LEFT", button.rewardFS, "RIGHT", 5, -3)
-			button.bountyFS:SetPoint("LEFT", button.rewardFS, "RIGHT", 25, 0)
-			button.factionFS:SetPoint("LEFT", button.bountyFS, "RIGHT", 10, 0)
-			button.timeLeftFS:SetPoint("LEFT", button.factionFS, "RIGHT", 10, 0)
+				button.icon:SetPoint("LEFT", button, "LEFT", 5, 0)
+				button.titleFS:SetPoint("LEFT", button.icon, "RIGHT", 5, 0)
+				button.title:SetPoint("LEFT", button.titleFS, "LEFT", 0, 0)
+				button.rewardFS:SetPoint("LEFT", button.titleFS, "RIGHT", 10, 0)
+				button.reward:SetPoint("LEFT", button.rewardFS, "LEFT", 0, 0)
+				button.track:SetPoint("LEFT", button.rewardFS, "RIGHT", 5, -3)
+				button.bountyFS:SetPoint("LEFT", button.rewardFS, "RIGHT", 25, 0)
+				button.factionFS:SetPoint("LEFT", button.bountyFS, "RIGHT", 10, 0)
+				button.timeLeftFS:SetPoint("LEFT", button.factionFS, "RIGHT", 10, 0)
 
-			buttonIndex = buttonIndex + 1
-		end -- quest loop
-	end
+				buttonIndex = buttonIndex + 1
+			end -- quest loop
+		end
 	end -- maps loop
 
-	titleMaxWidth = 300
-	rewardMaxWidth = rewardMaxWidth < 225 and 225 or rewardMaxWidth > 375 and 375 or rewardMaxWidth
+	titleMaxWidth = 300																								-- set max width of title (quest name)
+	rewardMaxWidth = rewardMaxWidth < 235 and 235 or rewardMaxWidth > 385 and 385 or rewardMaxWidth					-- Set max width of reward cell
 	factionMaxWidth = C("hideFactionColumn") and 0 or factionMaxWidth < 100 and 100 or factionMaxWidth
 	timeLeftMaxWidth = 65
-	BWQ.totalWidth = titleMaxWidth + bountyMaxWidth + factionMaxWidth + rewardMaxWidth + timeLeftMaxWidth + 80
+	BWQ.totalWidth = titleMaxWidth + bountyMaxWidth + factionMaxWidth + rewardMaxWidth + timeLeftMaxWidth + 80		-- Set total max width
 
 	local bountyBoardWidth = BWQ.bountyDisplay:GetWidth()
 	local factionDisplayWidth = BWQ.factionDisplay:GetWidth()
@@ -2087,7 +2226,6 @@ function BWQ:SetupConfigMenu()
 				{ text = "Other", check = "showOtherItems" },
 			}
 		},
-		{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "showBloodyTokens" },
 		{ text = ("|T%1$s:16:16|t  XP Only Quests"):format("Interface\\Icons\\xp_icon"), check = "showXP" },
 		{ text = ("|T%1$s:16:16|t  Honor"):format("Interface\\Icons\\Achievement_LegionPVPTier4"), check = "showHonor" },
 		{ text = ("|T%1$s:16:16|t  Low gold reward"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "showLowGold" },
@@ -2107,6 +2245,7 @@ function BWQ:SetupConfigMenu()
 		},
 		{ text = "      Dragonflight", submenu = {
 				{ text = ("|T%1$s:16:16|t  Reputation Tokens"):format("Interface\\Icons\\inv_scroll_11"), check = "showDFReputation" },
+				{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "showBloodyTokens" },
 				{ text = ("|T%1$s:16:16|t  Dragon Isles Supplies"):format("Interface\\Icons\\inv_faction_warresources"), check = "showDragonIslesSupplies" },
 				{ text = ("|T%1$s:16:16|t  Elemental Overflow"):format("Interface\\Icons\\inv_misc_powder_thorium"), check = "ShowElementalOverflow" },
 				{ text = ("|T%1$s:16:16|t  Flightstones"):format("Interface\\Icons\\flightstone-dragonflight"), check = "showFlightstones" },
@@ -2166,6 +2305,7 @@ function BWQ:SetupConfigMenu()
 				{ text = "Fishing", check="showProfessionFishing" },
 			}
 		},
+		{ text = "Dragon Rider Racing", check = "showDragonRiderRacing" },
 		{ text = "Dungeon Quests", check = "showDungeon" },
 		{ text = "PvP Quests", check = "showPvP" },
 		{ text = "Pet Battle Quests", check = "showPetBattle", submenu = {

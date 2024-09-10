@@ -86,6 +86,7 @@ CONSTANTS.QUEST_TYPES = {
 
 local isHorde = UnitFactionGroup("player") == "Horde"
 CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
+	[-1]  = "worldquest-icon-clock",
 	[116] = "worldquest-icon-blacksmithing",
 	[117] = "worldquest-icon-leatherworking",
 	[118] = "worldquest-icon-alchemy",
@@ -111,6 +112,7 @@ CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
 	[259] = isHorde and "worldquest-icon-horde" or "worldquest-icon-alliance",
 	[260] = isHorde and "worldquest-icon-horde" or "worldquest-icon-alliance",
 	[281] = "worldquest-icon-race",
+	[286] = "worldquest-Capstone-questmarker-epic-Toast",
 }
 
 CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE = {

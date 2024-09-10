@@ -1,8 +1,16 @@
 ### 11.0.2.14
-* Added new checkbox option (at the bottom of the list) to enable/disable
-  "Spew Debug Information".  This is intended for use by those working on the 
-  addon and should be unchecked for most users unless requested by a developer.
-*   
+* The locked "Special Assignment" (Capstone) world quests are now included. While
+  locked, what's provided by the addon is primarily informational. Once unlocked, then
+  it becomes like any other world quest. 
+* Dragon Rider Racing type world quests now have the appropriate icon at the front
+  of the row, similar to pet battles, etc.
+* Updated settings options:
+  * Added new option to filter out Dragon Rider Racing type world quests.  It's 
+    under "Filter by type".
+  * Moved the filter setting for "Bloody Tokens" to within the Dragon Isles section.
+  * Added new checkbox option (at the bottom of the list) to enable/disable
+    "Spew Debug Information".  This is intended for use by those working on the 
+    addon and should be unchecked for most users unless requested by a developer.
 
 ### 11.0.2.13
 * Added support for world quests that only provide information regarding
