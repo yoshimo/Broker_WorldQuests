@@ -11,80 +11,6 @@ local CONSTANTS = addon.CONSTANTS
 --
 --]]----
 
--- When adding zones to MAP_ZONES, be sure to also add the zoneID to MAP_ZONES_SORT immediately below
--- The simplest way to get the MapID for the zone you are currently in is to enter "/dump C_Map.GetBestMapForUnit("player")"
-local MAP_ZONES = {
-	[CONSTANTS.EXPANSIONS.THEWARWITHIN] = {
-		[2248] = { id = 2248, name = C_Map.GetMapInfo(2248).name, quests = {}, buttons = {}, }, -- Isle of Dorn 11.0
-		[2214] = { id = 2214, name = C_Map.GetMapInfo(2214).name, quests = {}, buttons = {}, }, -- The Ringing Deeps 11.0
-		[2215] = { id = 2215, name = C_Map.GetMapInfo(2215).name, quests = {}, buttons = {}, }, -- Hallowfall 11.0
-		[2255] = { id = 2255, name = C_Map.GetMapInfo(2255).name, quests = {}, buttons = {}, }, -- Azj-Kahet 11.0
-	},
-	[CONSTANTS.EXPANSIONS.DRAGONFLIGHT] = {
-		[2022] = { id = 2022, name = C_Map.GetMapInfo(2022).name, quests = {}, buttons = {}, }, -- The Waking Shores 10.0
-		[2023] = { id = 2023, name = C_Map.GetMapInfo(2023).name, quests = {}, buttons = {}, }, -- Ohn'ahran Plains 10.0
-		[2024] = { id = 2024, name = C_Map.GetMapInfo(2024).name, quests = {}, buttons = {}, }, -- The Azure Span 10.0
-		[2025] = { id = 2025, name = C_Map.GetMapInfo(2025).name, quests = {}, buttons = {}, }, -- Thaldraszus 10.0
-		[2085] = { id = 2085, name = C_Map.GetMapInfo(2085).name, quests = {}, buttons = {}, }, -- Primalist Tomorrow 10.0
-		[2151] = { id = 2151, name = C_Map.GetMapInfo(2151).name, quests = {}, buttons = {}, }, -- The Forbidden Reach 10.0.7
-		[2133] = { id = 2133, name = C_Map.GetMapInfo(2133).name, quests = {}, buttons = {}, }, -- Zaralek Cavern 10.1
-		[2200] = { id = 2200, name = C_Map.GetMapInfo(2200).name, quests = {}, buttons = {}, }, -- Emerald Dream 10.2
-	},
-	[CONSTANTS.EXPANSIONS.SHADOWLANDS] = {
-		[1525] = { id = 1525, name = C_Map.GetMapInfo(1525).name, quests = {}, buttons = {}, }, -- Revendreth 9.0
-		[1533] = { id = 1533, name = C_Map.GetMapInfo(1533).name, quests = {}, buttons = {}, }, -- Bastion 9.0
-		[1536] = { id = 1536, name = C_Map.GetMapInfo(1536).name, quests = {}, buttons = {}, }, -- Maldraxxus 9.0
-		[1565] = { id = 1565, name = C_Map.GetMapInfo(1565).name, quests = {}, buttons = {}, }, -- Ardenwald 9.0
-		[1543] = { id = 1543, name = C_Map.GetMapInfo(1543).name, quests = {}, buttons = {}, }, -- The Maw 9.1
-		[1970] = { id = 1970, name = C_Map.GetMapInfo(1970).name, quests = {}, buttons = {}, }, -- Zereth Mortis 9.2
-	},
-	[CONSTANTS.EXPANSIONS.BFA] = {
-		[863] = { id = 863,   name = C_Map.GetMapInfo(863).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },      -- Nazmir
-		[864] = { id = 864,   name = C_Map.GetMapInfo(864).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },      -- Vol'dun
-		[862] = { id = 862,   name = C_Map.GetMapInfo(862).name, faction = CONSTANTS.FACTIONS.HORDE, quests = {}, buttons = {}, },      -- Zuldazar
-		[895] = { id = 895,   name = C_Map.GetMapInfo(895).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },   -- Tiragarde
-		[942] = { id = 942,   name = C_Map.GetMapInfo(942).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },   -- Stormsong Valley
-		[896] = { id = 896,   name = C_Map.GetMapInfo(896).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },   -- Drustvar
-		[1161] = { id = 1161, name = C_Map.GetMapInfo(1161).name, faction = CONSTANTS.FACTIONS.ALLIANCE, quests = {}, buttons = {}, },  -- Boralus
-		[1527] = { id = 1527, name = C_Map.GetMapInfo(1527).name, quests = {}, buttons = {}, },  -- Uldum 8.3
-		[1530] = { id = 1530, name = C_Map.GetMapInfo(1530).name, quests = {}, buttons = {}, },  -- Valley of Eternal Blossoms 8.3
-		[1355] = { id = 1355, name = C_Map.GetMapInfo(1355).name, quests = {}, buttons = {}, },  -- Nazjatar 8.2
-		[1462] = { id = 1462, name = C_Map.GetMapInfo(1462).name, quests = {}, buttons = {}, },  -- Mechagon 8.2
-		[14] = { id = 14,     name = C_Map.GetMapInfo(14).name,  quests = {}, buttons = {}, },   -- Arathi
-		[62] = { id = 62,     name = C_Map.GetMapInfo(62).name,  quests = {}, buttons = {}, },   -- Darkshore
-	},
-	[CONSTANTS.EXPANSIONS.LEGION] = {
-		[630] = { id = 630,   name = C_Map.GetMapInfo(630).name, quests = {}, buttons = {}, },   -- Aszuna
-		[790] = { id = 790,   name = C_Map.GetMapInfo(790).name, quests = {}, buttons = {}, },   -- Eye of Azshara
-		[641] = { id = 641,   name = C_Map.GetMapInfo(641).name, quests = {}, buttons = {}, },   -- Val'sharah
-		[650] = { id = 650,   name = C_Map.GetMapInfo(650).name, quests = {}, buttons = {}, },   -- Highmountain
-		[634] = { id = 634,   name = C_Map.GetMapInfo(634).name, quests = {}, buttons = {}, },   -- Stormheim
-		[680] = { id = 680,   name = C_Map.GetMapInfo(680).name, quests = {}, buttons = {}, },   -- Suramar
-		[627] = { id = 627,   name = C_Map.GetMapInfo(627).name, quests = {}, buttons = {}, },   -- Dalaran
-		[646] = { id = 646,   name = C_Map.GetMapInfo(646).name, quests = {}, buttons = {}, },   -- Broken Shore
-		[830] = { id = 830,   name = C_Map.GetMapInfo(830).name, quests = {}, buttons = {}, },   -- Krokuun
-		[882] = { id = 882,   name = C_Map.GetMapInfo(882).name, quests = {}, buttons = {}, },   -- Mac'aree
-		[885] = { id = 885,   name = C_Map.GetMapInfo(885).name, quests = {}, buttons = {}, },   -- Antoran Wastes
-	},
-}
-local MAP_ZONES_SORT = {
-	[CONSTANTS.EXPANSIONS.THEWARWITHIN] = {
-		2248, 2214, 2215, 2255
-	},
-	[CONSTANTS.EXPANSIONS.DRAGONFLIGHT] = {
-		2022, 2023, 2024, 2025, 2085, 2151, 2133, 2200
-	},
-	[CONSTANTS.EXPANSIONS.SHADOWLANDS] = {
-		1525, 1533, 1536, 1565, 1543, 1970
-	},
-	[CONSTANTS.EXPANSIONS.BFA] = {
-		1530, 1527, 1355, 1462, 62, 14, 863, 864, 862, 895, 942, 896, 1161
-	},
-	[CONSTANTS.EXPANSIONS.LEGION] = {
-		630, 790, 641, 650, 634, 680, 627, 646, 830, 882, 885
-	},
-}
-
 local defaultConfig = {
 	-- general
 	attachToWorldMap = false,
@@ -527,7 +453,7 @@ function BWQ:QueryZoneQuestCoordinates(mapId)
 	local quests = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	if quests then
 		for _, v in next, quests do
-			local quest = MAP_ZONES[BWQ.expansion][mapId].quests[v.questId] 
+			local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[v.questId] 
 			if quest then
 				quest.x = v.x
 				quest.y = v.y
@@ -584,7 +510,7 @@ local RetrieveWorldQuests = function(mapId)
 
 	if questList then
 		numQuests = 0
-		MAP_ZONES[BWQ.expansion][mapId].questsSort = {}
+		BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort = {}
 
 		local timeLeft, questTagInfo, title, factionId
 		for i, q in ipairs(questList) do
@@ -604,8 +530,8 @@ local RetrieveWorldQuests = function(mapId)
 
 				if questTagInfo and questTagInfo.worldQuestType then
 					local questId = q.questId
-					table.insert(MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
-					local quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
+					table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
+					local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
 
 					if not quest.timeAdded then
 						quest.wasSaved = BWQ.questIds[questId] ~= nil
@@ -655,8 +581,6 @@ local RetrieveWorldQuests = function(mapId)
 							quest.reward.itemQuality = quality
 							quest.reward.itemQuantity = quantity
 							quest.reward.itemName = itemName
-
-
 							--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s", quest.questId, quest.title, itemName, itemId, quantity))    -- for debugging
 							
 							local _, _, _, _, _, _, _, _, equipSlot, _, _, classId, subClassId = GetItemInfo(quest.reward.itemId)
@@ -1021,7 +945,7 @@ local RetrieveWorldQuests = function(mapId)
 					-- don't filter epic quests based on setting
 					if C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == Enum.QuestTagType.Raid) then quest.hide = false end
 
-					MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+					BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
 
 					if not quest.hide then
 						numQuests = numQuests + 1
@@ -1145,12 +1069,12 @@ local RetrieveWorldQuests = function(mapId)
 		end
 
 		if C("sortByTimeRemaining") then
-			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
+			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
 		else -- reward type
-			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
+			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
 		end
 
-		MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
+		BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
 	end
 
 	-- Retrieve locked world quests (i.e., capstone quests), which are handled differently
@@ -1160,8 +1084,8 @@ local RetrieveWorldQuests = function(mapId)
             local poi = C_AreaPoiInfo.GetAreaPOIInfo(mapId,poiID)
             if poi and string.find(poi.name, "Special Assignment") then		-- TODO:  Are there other "names" that should be showing other than "Special Assignment" quests?
 				local questId = poi.areaPoiID
-				table.insert(MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
-				local quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
+				table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
+				local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
 				quest.title = poi.name
 				quest.LockedWQ = true
 				if not quest.timeAdded then
@@ -1243,18 +1167,18 @@ local RetrieveWorldQuests = function(mapId)
 					end
 				end
 
-				MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
 				numQuests = numQuests + 1
 			end
 		end
 
 		if C("sortByTimeRemaining") then
-			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
+			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
 		else -- reward type
-			table.sort(MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
+			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
 		end
 
-		MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
+		BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
 	end
 end
 
@@ -1569,14 +1493,14 @@ function BWQ:UpdateQuestData()
 	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
 	BWQ.totalXP = 0
 
-	for mapId in next, MAP_ZONES[BWQ.expansion] do
+	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
 		RetrieveWorldQuests(mapId)
 	end
 
 	BWQ.numQuestsTotal = 0
 	BWQ.hasCollapsedQuests = false
-	for mapId in next, MAP_ZONES[BWQ.expansion] do
-		local num = MAP_ZONES[BWQ.expansion][mapId].numQuests
+	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
+		local num = BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests
 		if num > 0 then
 			if not C("collapsedZones")[mapId] then
 				BWQ.numQuestsTotal = BWQ.numQuestsTotal + num
@@ -1589,8 +1513,8 @@ function BWQ:UpdateQuestData()
 	-- save quests to saved vars to check new status after reload/relog
 	if BWQ.numQuestsTotal ~= 0 then
 		BWQ.questIds = {}
-		for mapId in next, MAP_ZONES[BWQ.expansion] do
-			for _, questId in next, MAP_ZONES[BWQ.expansion][mapId].questsSort do
+		for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
+			for _, questId in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
 				BWQ.questIds[questId] = true
 			end
 		end
@@ -1613,8 +1537,8 @@ function BWQ:RenderRows()
 	local maxEntries = math.floor((availableHeight + BWQ.offsetTop - 10) / ( -1 * ROW_HEIGHT ))
 
 	local numEntries = BWQ.numQuestsTotal
-	for mapId in next, MAP_ZONES[BWQ.expansion] do
-		if MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
+	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
+		if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
 			numEntries = numEntries + 1
 		end
 	end
@@ -1642,37 +1566,37 @@ function BWQ:RenderRows()
 	local sliderval = math.floor(BWQ.slider:GetValue())
 	local rowIndex = 0
 	local rowInViewIndex = 0
-	for _, mapId in next, MAP_ZONES_SORT[BWQ.expansion] do
+	for _, mapId in next, BWQ.MAP_ZONES_SORT[BWQ.expansion] do
 		
 		local collapsed = C("collapsedZones")[mapId]
 
-		if MAP_ZONES[BWQ.expansion][mapId].numQuests == 0 or rowIndex < sliderval or rowIndex > sliderval + maxEntries then
+		if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests == 0 or rowIndex < sliderval or rowIndex > sliderval + maxEntries then
 
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Hide()
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Hide()
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Hide()
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Hide()
 		else
 
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Show()
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetPoint("TOP", BWQ, "TOP", 15 + (BWQ.totalWidth / -2) + (MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:GetStringWidth() / 2), BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 2)
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Show()
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetPoint("TOP", BWQ, "TOP", 5, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 3)
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Show()
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetPoint("TOP", BWQ, "TOP", 15 + (BWQ.totalWidth / -2) + (BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:GetStringWidth() / 2), BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 2)
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Show()
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetPoint("TOP", BWQ, "TOP", 5, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 3)
 
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:Show()
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:SetAllPoints(MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs)
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:Show()
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:SetAllPoints(BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs)
 			local color = not collapsed and {0.9, 0.8, 0} or {0.3, 0.3, 0.3}
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetTextColor(unpack(color))
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetTextColor(unpack(color))
 			
 			rowInViewIndex = rowInViewIndex + 1
 		end
 
-		if MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
+		if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
 			rowIndex = rowIndex + 1 -- count up from row with zone name
 		end
 
 		BWQ.highlightedRow = true
 		local buttonIndex = 1
-		for _, button in ipairs(MAP_ZONES[BWQ.expansion][mapId].buttons) do
-			if not button.quest.hide and not collapsed and buttonIndex <= MAP_ZONES[BWQ.expansion][mapId].numQuests then
+		for _, button in ipairs(BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons) do
+			if not button.quest.hide and not collapsed and buttonIndex <= BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests then
 				if rowIndex < sliderval  or rowIndex > sliderval + maxEntries then
 					button:Hide()
 				else
@@ -1718,7 +1642,7 @@ function BWQ:SwitchExpansion(expac)
 end 
 
 function BWQ:HideRowsOfInactiveExpansions()
-	for k, expac in next, MAP_ZONES do
+	for k, expac in next, BWQ.MAP_ZONES do
 		if k ~= BWQ.expansion then
 			for mapId, v in next, expac do
 				if v.zoneSep then
@@ -1764,17 +1688,17 @@ function BWQ:UpdateBlock()
 	end
 
 	local titleMaxWidth, bountyMaxWidth, factionMaxWidth, rewardMaxWidth, timeLeftMaxWidth = 0, 0, 0, 0, 0
-	for mapId in next, MAP_ZONES[BWQ.expansion] do
+	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
 		local buttonIndex = 1
 
-		if not MAP_ZONES[BWQ.expansion][mapId].zoneSep then
+		if not BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep then
 			local zoneSep = {
 				fs = BWQ:CreateFontString("BWQzoneNameFS", "OVERLAY", "SystemFont_Shadow_Med1"),
 				texture = BWQ:CreateTexture(),
 				collapse = CreateFrame("Button", nil, BWQ, "BackdropTemplate")
 			}
-			local faction = MAP_ZONES[BWQ.expansion][mapId].faction
-			local zoneText = MAP_ZONES[BWQ.expansion][mapId].name
+			local faction = BWQ.MAP_ZONES[BWQ.expansion][mapId].faction
+			local zoneText = BWQ.MAP_ZONES[BWQ.expansion][mapId].name
 			if faction then
 				local factionIcon = faction == CONSTANTS.FACTIONS.HORDE and "Interface\\Icons\\inv_misc_tournaments_banner_orc" or "Interface\\Icons\\inv_misc_tournaments_banner_human"
 				zoneText = ("%2$s   |T%1$s:12:12|t"):format(factionIcon, zoneText)
@@ -1792,13 +1716,13 @@ function BWQ:UpdateBlock()
 			zoneSep.texture:SetTexture("Interface\\FriendsFrame\\UI-FriendsFrame-OnlineDivider")
 			zoneSep.texture:SetHeight(8)
 
-			MAP_ZONES[BWQ.expansion][mapId].zoneSep = zoneSep
+			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep = zoneSep
 		end
 
 		if not C("collapsedZones")[mapId] then 
-			for _, questId in next, MAP_ZONES[BWQ.expansion][mapId].questsSort do
+			for _, questId in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
 				local button
-				if buttonIndex > #MAP_ZONES[BWQ.expansion][mapId].buttons then
+				if buttonIndex > #BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons then
 
 					button = CreateFrame("Button", nil, BWQ)
 					button:RegisterForClicks("AnyUp")
@@ -1863,13 +1787,13 @@ function BWQ:UpdateBlock()
 					button.timeLeftFS:SetTextColor(.9, .9, .9)
 					button.timeLeftFS:SetWordWrap(false)
 
-					MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex] = button
+					BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex] = button
 				else
-					button = MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex]
+					button = BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[buttonIndex]
 				end
 
 				button.mapId = mapId
-				button.quest = MAP_ZONES[BWQ.expansion][mapId].quests[questId]
+				button.quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId]
 				button.questID = button.quest.questId
 				button.worldQuest = true
 				button.numObjectives = button.quest.numObjectives
@@ -1905,16 +1829,6 @@ function BWQ:UpdateBlock()
 						BWQ:Block_OnLeave()
 					end)
 				else
-					if button.quest.reward.xp and button.quest.reward.xp > 0 then
-						rewardText = string.format(
-							"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
-							rewardText,
-							rewardText ~= "" and "   " or "", -- insert some space between rewards
-							"Interface\\Icons\\xp_icon",
-							button.quest.reward.xp,
-							XP
-						) 
-					end
 					if button.quest.reward.itemName then
 						local itemText = string.format(
 							"%s[%s%s]|r",
@@ -1960,6 +1874,16 @@ function BWQ:UpdateBlock()
 							tip:Hide()
 							BWQ:Block_OnLeave()
 						end)
+					end
+					if button.quest.reward.xp and button.quest.reward.xp > 0 and not button.quest.reward.itemName then
+						rewardText = string.format(
+							"%1$s%2$s|T%3$s:14:14|t %4$d %5$s",
+							rewardText,
+							rewardText ~= "" and "   " or "", -- insert some space between rewards
+							"Interface\\Icons\\xp_icon",
+							button.quest.reward.xp,
+							XP
+						) 
 					end
 					if button.quest.reward.honor and button.quest.reward.honor > 0 then
 						rewardText = string.format(
@@ -2080,23 +2004,23 @@ function BWQ:UpdateBlock()
 		rewardMaxWidth = rewardMaxWidth + diff
 	end
 
-	for mapId in next, MAP_ZONES[BWQ.expansion] do
-		for i = 1, #MAP_ZONES[BWQ.expansion][mapId].buttons do
-			if not MAP_ZONES[BWQ.expansion][mapId].buttons[i].quest.hide then -- dont care about the hidden ones
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i]:SetHeight(15)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i]:SetWidth(BWQ.totalWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].title:SetWidth(titleMaxWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].titleFS:SetWidth(titleMaxWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].bountyFS:SetWidth(bountyMaxWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].factionFS:SetWidth(factionMaxWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].reward:SetWidth(rewardMaxWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].rewardFS:SetWidth(rewardMaxWidth)
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i].timeLeftFS:SetWidth(timeLeftMaxWidth)
+	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
+		for i = 1, #BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons do
+			if not BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].quest.hide then -- dont care about the hidden ones
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i]:SetHeight(15)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i]:SetWidth(BWQ.totalWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].title:SetWidth(titleMaxWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].titleFS:SetWidth(titleMaxWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].bountyFS:SetWidth(bountyMaxWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].factionFS:SetWidth(factionMaxWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].reward:SetWidth(rewardMaxWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].rewardFS:SetWidth(rewardMaxWidth)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i].timeLeftFS:SetWidth(timeLeftMaxWidth)
 			else
-				MAP_ZONES[BWQ.expansion][mapId].buttons[i]:Hide()
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons[i]:Hide()
 			end
 		end
-		MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetWidth(BWQ.totalWidth + 20)
+		BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetWidth(BWQ.totalWidth + 20)
 	end
 
 	BWQ.totalWidth = BWQ.totalWidth + 20
