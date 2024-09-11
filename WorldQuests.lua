@@ -490,12 +490,14 @@ local Row_OnClick = function(row)
 		end
 
 		if TomTom and C("enableTomTomWaypointsOnClick") then
-			if not row.quest.x or not row.quest.y then BWQ:QueryZoneQuestCoordinates(row.mapId) end
-			if row.quest.x and row.quest.y then
-				if BWQ.TomTomWaypoints[row.quest.questId] then 
-					TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[row.quest.questId]) 
-				else
-					BWQ.TomTomWaypoints[row.quest.questId] = TomTom:AddWaypoint(row.mapId, row.quest.x, row.quest.y, { title = row.quest.title, silent = true })
+			if C_AddOns.IsAddOnLoaded("TomTom") then 
+				if not row.quest.x or not row.quest.y then BWQ:QueryZoneQuestCoordinates(row.mapId) end
+				if row.quest.x and row.quest.y then
+					if BWQ.TomTomWaypoints[row.quest.questId] then 
+						TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[row.quest.questId]) 
+					else
+						BWQ.TomTomWaypoints[row.quest.questId] = TomTom:AddWaypoint(row.mapId, row.quest.x, row.quest.y, { title = row.quest.title, silent = true, from = "Broker_WorldQuests" })
+					end
 				end
 			end
 		end
@@ -2543,12 +2545,12 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			BWQ:UnregisterEvent("ADDON_LOADED")
 		end
 	elseif event == "QUEST_ACCEPTED" then
-		if TomTom and BWQ.TomTomWaypoints[arg1] then 
+		if TomTom and BWQ.TomTomWaypoints[arg1] and C_AddOns.IsAddOnLoaded("TomTom") then 
 			TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[arg1]) 
 			BWQ.TomTomWaypoints[arg1] = nil
 		end
 	elseif event == "PLAYER_LOGOUT" then
-		if TomTom and #BWQ.TomTomWaypoints then
+		if TomTom and #BWQ.TomTomWaypoints and C_AddOns.IsAddOnLoaded("TomTom") then
 			for k, v in pairs(BWQ.TomTomWaypoints) do
 				TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[k])
 				BWQ.TomTomWaypoints[k] = nil
