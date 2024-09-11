@@ -145,6 +145,7 @@ BWQ.showDownwards = false
 BWQ.blockYPos = 0
 BWQ.highlightedRow = true
 BWQ.hasUnlockedWorldQuests = false
+BWQ.TomTomWaypoints = {}
 
 -- When adding zones to MAP_ZONES, be sure to also add the zoneID to MAP_ZONES_SORT immediately below
 -- The simplest way to get the MapID for the zone you are currently in is to enter "/dump C_Map.GetBestMapForUnit("player")"

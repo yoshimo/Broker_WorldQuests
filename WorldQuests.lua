@@ -465,7 +465,7 @@ end
 function BWQ:CalculateMapPosition(x, y)
 	return x * WorldMapFrame:GetCanvas():GetWidth() , -1 * y * WorldMapFrame:GetCanvas():GetHeight() 
 end
-local currentTomTomWaypoint
+
 local Row_OnClick = function(row)
 	if IsShiftKeyDown() then
 		if (C_QuestLog.GetQuestWatchType(row.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == row.quest.questId) then
@@ -492,8 +492,11 @@ local Row_OnClick = function(row)
 		if TomTom and C("enableTomTomWaypointsOnClick") then
 			if not row.quest.x or not row.quest.y then BWQ:QueryZoneQuestCoordinates(row.mapId) end
 			if row.quest.x and row.quest.y then
-				if currentTomTomWaypoint then TomTom:RemoveWaypoint(currentTomTomWaypoint) end
-				currentTomTomWaypoint = TomTom:AddWaypoint(row.mapId, row.quest.x, row.quest.y, { title = row.quest.title, silent = true })
+				if BWQ.TomTomWaypoints[row.quest.questId] then 
+					TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[row.quest.questId]) 
+				else
+					BWQ.TomTomWaypoints[row.quest.questId] = TomTom:AddWaypoint(row.mapId, row.quest.x, row.quest.y, { title = row.quest.title, silent = true })
+				end
 			end
 		end
 	end
@@ -2108,6 +2111,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Legionfall War Supplies"):format("Interface\\Icons\\inv_misc_summonable_boss_token"), check = "brokerShowLegionfallSupplies" },
 				{ text = ("|T%1$s:16:16|t  XP Only Quests"):format("Interface\\Icons\\xp_icon"), check = "brokerShowXP" },
 				{ text = ("|T%1$s:16:16|t  Honor"):format("Interface\\Icons\\Achievement_LegionPVPTier4"), check = "brokerShowHonor" },
+				{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "brokerShowBloodyTokens" },
 				{ text = ("|T%1$s:16:16|t  Gold"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "brokerShowGold" },
 				{ text = ("|T%1$s:16:16|t  Gear"):format("Interface\\Icons\\Inv_chest_plate_legionendgame_c_01"), check = "brokerShowGear" },
 				{ text = ("|T%1$s:16:16|t  Mark Of Honor"):format("Interface\\Icons\\ability_pvp_gladiatormedallion"), check = "brokerShowMarkOfHonor" },
@@ -2116,7 +2120,6 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Fishing Quests"):format("Interface\\Icons\\Trade_Fishing"), check = "brokerShowFishing" },
 				{ text = ("|T%1$s:16:16|t  Skinning Quests"):format("Interface\\Icons\\inv_misc_pelt_wolf_01"), check = "brokerShowSkinning" },
 				{ text = ("|T%s$s:16:16|t  Blood of Sargeras"):format("1417744"), check = "brokerShowBloodOfSargeras" },
-				{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "brokerShowBloodyTokens" },
 				{ text = ("|T%1$s:16:16|t  Dragon Isles Supplies"):format("Interface\\Icons\\inv_faction_warresources"), check = "brokerShowDragonIslesSupplies" },
 				{ text = ("|T%1$s:16:16|t  Elemental Overflow"):format("Interface\\Icons\\inv_misc_powder_thorium"), check = "brokerShowElementalOverflow" },
 				{ text = ("|T%1$s:16:16|t  Flightstones"):format("Interface\\Icons\\flightstone-dragonflight"), check = "brokerShowFlightstones" },
@@ -2152,6 +2155,7 @@ function BWQ:SetupConfigMenu()
 		},
 		{ text = ("|T%1$s:16:16|t  XP Only Quests"):format("Interface\\Icons\\xp_icon"), check = "showXP" },
 		{ text = ("|T%1$s:16:16|t  Honor"):format("Interface\\Icons\\Achievement_LegionPVPTier4"), check = "showHonor" },
+		{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "showBloodyTokens" },
 		{ text = ("|T%1$s:16:16|t  Low gold reward"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "showLowGold" },
 		{ text = ("|T%1$s:16:16|t  High gold reward"):format("Interface\\GossipFrame\\auctioneerGossipIcon"), check = "showHighGold" },
 		{ text = "      The War Within", submenu = {
@@ -2169,7 +2173,6 @@ function BWQ:SetupConfigMenu()
 		},
 		{ text = "      Dragonflight", submenu = {
 				{ text = ("|T%1$s:16:16|t  Reputation Tokens"):format("Interface\\Icons\\inv_scroll_11"), check = "showDFReputation" },
-				{ text = ("|T%1$s:16:16|t  Bloody Tokens"):format("Interface\\Icons\\inv_10_dungeonjewelry_titan_trinket_2_color2"), check = "showBloodyTokens" },
 				{ text = ("|T%1$s:16:16|t  Dragon Isles Supplies"):format("Interface\\Icons\\inv_faction_warresources"), check = "showDragonIslesSupplies" },
 				{ text = ("|T%1$s:16:16|t  Elemental Overflow"):format("Interface\\Icons\\inv_misc_powder_thorium"), check = "ShowElementalOverflow" },
 				{ text = ("|T%1$s:16:16|t  Flightstones"):format("Interface\\Icons\\flightstone-dragonflight"), check = "showFlightstones" },
@@ -2540,9 +2543,17 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			BWQ:UnregisterEvent("ADDON_LOADED")
 		end
 	elseif event == "QUEST_ACCEPTED" then
-		if TomTom and currentTomTomWaypoint and (C_QuestLog.GetTitleForLogIndex(arg1) == currentTomTomWaypoint.title) then TomTom:RemoveWaypoint(currentTomTomWaypoint) end
+		if TomTom and BWQ.TomTomWaypoints[arg1] then 
+			TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[arg1]) 
+			BWQ.TomTomWaypoints[arg1] = nil
+		end
 	elseif event == "PLAYER_LOGOUT" then
-		if TomTom and currentTomTomWaypoint then TomTom:RemoveWaypoint(currentTomTomWaypoint) end
+		if TomTom and #BWQ.TomTomWaypoints then
+			for k, v in pairs(BWQ.TomTomWaypoints) do
+				TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[k])
+				BWQ.TomTomWaypoints[k] = nil
+			end
+		end
 	end
 end)
 
