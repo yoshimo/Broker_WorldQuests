@@ -113,6 +113,7 @@ CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
 	[260] = isHorde and "worldquest-icon-horde" or "worldquest-icon-alliance",
 	[281] = "worldquest-icon-race",
 	[286] = "worldquest-Capstone-questmarker-epic-Toast",
+	[289] = "worldquest-icon-boss",
 }
 
 CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE = {

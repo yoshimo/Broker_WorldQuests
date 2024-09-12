@@ -1,3 +1,12 @@
+### 11.0.2.15
+* When enabled in settings, the Tom Tom waypoints support feature will now "add"
+  waypoints rather than just maintaining adding/removing a single waypoint.
+* TWW Epic Boss type world quests now have the appropriate icon at the front
+  of the row, similar to pet battles, etc.
+* Fixed a bug that was introduced in version 11.0.2.13.
+* Now that Bloody Tokens are also part of the TWW expansion, the filter settings
+  for that currency has been moved next to "Honor".
+
 ### 11.0.2.14
 * The locked "Special Assignment" (Capstone) world quests are now included. While
   locked, what's provided by the addon is primarily informational. Once unlocked, then
