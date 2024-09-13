@@ -137,21 +137,21 @@ BWQ:SetScript("OnLeave", function() BWQ:Block_OnLeave() end)
 --==========================================================
 -- Super Track Map Ping
 --==========================================================
-BWQ.mapTextures = CreateFrame("Frame", "BWQ_MapTextures", WorldMapFrame:GetCanvas())
-BWQ.mapTextures:SetSize(400,400)
-BWQ.mapTextures:SetFrameStrata("DIALOG")
-BWQ.mapTextures:SetFrameLevel(2001)
-local highlightArrow = BWQ.mapTextures:CreateTexture("highlightArrow")
+local mapTextures = CreateFrame("Frame", "BWQ_MapTextures", WorldMapFrame:GetCanvas())
+mapTextures:SetSize(400,400)
+mapTextures:SetFrameStrata("DIALOG")
+mapTextures:SetFrameLevel(2001)
+local highlightArrow = mapTextures:CreateTexture("highlightArrow")
 highlightArrow:SetTexture("Interface\\minimap\\MiniMap-DeadArrow")
 highlightArrow:SetSize(56, 56)
 highlightArrow:SetRotation(3.14)
 highlightArrow:SetPoint("CENTER", mapTextures)
 highlightArrow:SetDrawLayer("ARTWORK", 1)
-BWQ.mapTextures.highlightArrow = highlightArrow
-local animationGroup = BWQ.mapTextures:CreateAnimationGroup()
+mapTextures.highlightArrow = highlightArrow
+local animationGroup = mapTextures:CreateAnimationGroup()
 animationGroup:SetLooping("REPEAT")
-animationGroup:SetScript("OnPlay", function(self)	BWQ.mapTextures.highlightArrow:Show()	end)
-animationGroup:SetScript("OnStop", function(self)	BWQ.mapTextures.highlightArrow:Hide()	end)
+animationGroup:SetScript("OnPlay", function(self)		mapTextures.highlightArrow:Show()		end)
+animationGroup:SetScript("OnStop", function(self)		mapTextures.highlightArrow:Hide()		end)
 local downAnimation = animationGroup:CreateAnimation("Translation")
 downAnimation:SetChildKey("highlightArrow")
 downAnimation:SetOffset(0, -10)
@@ -162,7 +162,8 @@ upAnimation:SetChildKey("highlightArrow")
 upAnimation:SetOffset(0, 10)
 upAnimation:SetDuration(0.4)
 upAnimation:SetOrder(2)
-BWQ.mapTextures.animationGroup = animationGroup
+mapTextures.animationGroup = animationGroup
+BWQ.mapTextures = mapTextures
 
 --==========================================================
 -- Miscellaneous
