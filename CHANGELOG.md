@@ -1,3 +1,7 @@
+### 11.0.2.16
+* Fixed a bug with the "attach list frame to world map" feature as described at
+  https://github.com/Amadeus-/Broker_WorldQuests/issues/20
+
 ### 11.0.2.15
 * When enabled in settings, the Tom Tom waypoints support feature will now "add"
   waypoints rather than just maintaining adding/removing a single waypoint.
