@@ -1,3 +1,6 @@
+### 11.0.2.17
+* Fixed bug:  https://github.com/Amadeus-/Broker_WorldQuests/issues/21
+
 ### 11.0.2.16
 * Fixed a bug with the "attach list frame to world map" feature as described at
   https://github.com/Amadeus-/Broker_WorldQuests/issues/20

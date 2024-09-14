@@ -1704,7 +1704,6 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 end)
 
 -- data broker object
----local ldb = LibStub("LibDataBroker-1.1")
 BWQ.WorldQuestsBroker = LibStub("LibDataBroker-1.1"):NewDataObject("WorldQuests", {
 	type = "data source",
 	text = "World Quests",
