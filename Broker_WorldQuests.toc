@@ -12,6 +12,7 @@ Constants.lua
 Globals.lua
 UI.lua
 Config.lua
+Utilities.lua
 Bounties.lua
 Factions.lua
 WorldQuests.lua

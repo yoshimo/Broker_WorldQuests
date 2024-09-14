@@ -156,36 +156,6 @@ function BWQ:IsQuestAchievementCriteriaMissing(achievementId, questId)
 	end
 end
 
-local AbbreviateNumber = function(number)
-	number = tonumber(number)
-	if number >= 1000000 then
-		number = number / 1000000
-		return string.format((number % 1 == 0) and "%.0f%s" or "%.1f%s", number, "M")
-	elseif number >= 10000 then
-		return string.format("%.0f%s", number / 1000, "K")
-	end
-	return number
-end
-
-local FormatTimeLeftString = function(timeLeft)
-	if timeLeft <= 0 then return "" end
-	local timeLeftStr = ""
-	-- if timeLeft >= 60 * 24 then -- at least 1 day
-	-- 	timeLeftStr = string.format("%.0fd", timeLeft / 60 / 24)
-	-- end
-	if timeLeft >= 60 then -- hours
-		timeLeftStr = string.format("%.0fh", math.floor(timeLeft / 60))
-	end
-	timeLeftStr = string.format("%s%s%sm", timeLeftStr, timeLeftStr ~= "" and " " or "", timeLeft % 60) -- always show minutes
-
-	if 		timeLeft <= 120 then timeLeftStr = string.format("|cffD96932%s|r", timeLeftStr)
-	elseif 	timeLeft <= 240 then timeLeftStr = string.format("|cffDBA43B%s|r", timeLeftStr)
-	elseif 	timeLeft <= 480 then timeLeftStr = string.format("|cffE6D253%s|r", timeLeftStr)
-	elseif 	timeLeft <= 960 then timeLeftStr = string.format("|cffE6DA8E%s|r", timeLeftStr)
-	end
-	return timeLeftStr
-end
-
 local ShowQuestObjectiveTooltip = function(row)
 	BWQ.tooltip:SetOwner(row, "ANCHOR_CURSOR")
 	local color = WORLD_QUEST_QUALITY_COLORS[row.quest.quality]
@@ -283,8 +253,6 @@ local Row_OnClick = function(row)
 	end
 end
 
-local lastUpdate, updateTries = 0, 0
-local needsRefresh = false
 local DebugRetrieveWQ = false
 local RetrieveWorldQuests = function(mapId)
 	local numQuests = 0
@@ -620,7 +588,7 @@ local RetrieveWorldQuests = function(mapId)
 					if BWQcfg.spewDebugInfo and not hasReward and not HaveQuestData(quest.questId) then
 						print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questId, quest.title))
 					end
-					if not hasReward then needsRefresh = true end -- in most cases no reward means api returned incomplete data
+					if not hasReward then BWQ.needsRefresh = true end -- in most cases no reward means api returned incomplete data
 					
 					for _, bounty in ipairs(BWQ.bounties) do
 						if C_QuestLog.IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
@@ -966,7 +934,6 @@ local RetrieveWorldQuests = function(mapId)
 	end
 end
 
-local originalMap, originalContinent, originalDungeonLevel
 function BWQ:UpdateQuestData()
 	BWQ.questIds = BWQcache.questIds or {}
 	BWQ.totalArtifactPower, BWQ.totalGold, BWQ.totalWarResources, BWQ.totalServiceMedals, BWQ.totalResources, BWQ.totalLegionfallSupplies = 0, 0, 0, 0, 0, 0
@@ -1007,8 +974,8 @@ function BWQ:UpdateQuestData()
 		BWQcache.questIds = BWQ.questIds
 	end
 
-	if needsRefresh and updateTries < 3 then
-		updateTries = updateTries + 1
+	if BWQ.needsRefresh and BWQ.updateTries < 3 then
+		BWQ.updateTries = BWQ.updateTries + 1
 		C_Timer.After(1, function() BWQ:UpdateBlock() end)
 	end
 end
@@ -1123,7 +1090,7 @@ function BWQ:SwitchExpansion(expac)
 
 	BWQ:HideRowsOfInactiveExpansions()
 	BWQ.hasUnlockedWorldQuests = false
-	updateTries = 0
+	BWQ.updateTries = 0
 	BWQ:UpdateBlock()
 end 
 
@@ -1148,10 +1115,10 @@ end
 
 function BWQ:RunUpdate()
 	local currentTime = GetTime()
-	if currentTime - lastUpdate > 5 then
-		updateTries = 0
+	if currentTime - BWQ.lastUpdate > 5 then
+		BWQ.updateTries = 0
 		BWQ:UpdateBlock()
-		lastUpdate = currentTime
+		BWQ.lastUpdate = currentTime
 	end
 end
 
@@ -1167,9 +1134,9 @@ function BWQ:UpdateBlock()
 
 	BWQ:UpdateQuestData()
 	-- refreshing is limited to 3 runs and then gets forced to render the block
-	if needsRefresh and updateTries < 3 then
+	if BWQ.needsRefresh and BWQ.updateTries < 3 then
 		-- skip updating the block, received data was incomplete
-		needsRefresh = false
+		BWQ.needsRefresh = false
 		return
 	end
 
@@ -1449,7 +1416,7 @@ function BWQ:UpdateBlock()
 					button.factionFS:SetText("")
 				end
 
-				button.timeLeftFS:SetText(FormatTimeLeftString(button.quest.timeLeft))
+				button.timeLeftFS:SetText(BWQ:FormatTimeLeftString(button.quest.timeLeft))
 				--local timeLeftWidth = button.factionFS:GetStringWidth()
 				--if timeLeftWidth > timeLeftMaxWidth then timeLeftMaxWidth = timeLeftWidth end
 
@@ -1515,7 +1482,7 @@ function BWQ:UpdateBlock()
 	if BWQ:C("showTotalsInBrokerText") then
 		local brokerString = ""
 		if BWQ:C("brokerShowPolishedPetCharms")    	and BWQ.totalPolishedPetCharms > 0  	then brokerString = string.format("%s|TInterface\\Icons\\inv_currency_petbattle:16:16|t %d  ", brokerString, BWQ.totalPolishedPetCharms) end
-		if BWQ:C("brokerShowAP")                  	and BWQ.totalArtifactPower > 0      	then brokerString = string.format("%s|TInterface\\Icons\\inv_smallazeriteshard:16:16|t %s  ", brokerString, AbbreviateNumber(BWQ.totalArtifactPower)) end
+		if BWQ:C("brokerShowAP")                  	and BWQ.totalArtifactPower > 0      	then brokerString = string.format("%s|TInterface\\Icons\\inv_smallazeriteshard:16:16|t %s  ", brokerString, BWQ:AbbreviateNumber(BWQ.totalArtifactPower)) end
 		if BWQ:C("brokerShowServiceMedals")       	and BWQ.totalServiceMedals > 0      	then brokerString = string.format("%s|T%s:16:16|t %s  ", brokerString, self.isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal", BWQ.totalServiceMedals) end
 		if BWQ:C("brokerShowWakeningEssences")    	and BWQ.totalWakeningEssences > 0   	then brokerString = string.format("%s|TInterface\\Icons\\achievement_dungeon_ulduar80_25man:16:16|t %s  ", brokerString, BWQ.totalWakeningEssences) end
 		if BWQ:C("brokerShowWarResources")        	and BWQ.totalWarResources > 0       	then brokerString = string.format("%s|TInterface\\Icons\\inv__faction_warresources:16:16|t %d  ", brokerString, BWQ.totalWarResources) end
@@ -1607,7 +1574,6 @@ function BWQ:AttachToWorldMap()
 	BWQ:Show()
 end
 
-local skipNextUpdate = false
 BWQ:RegisterEvent("PLAYER_ENTERING_WORLD")
 BWQ:RegisterEvent("ADDON_LOADED")
 BWQ:SetScript("OnEvent", function(self, event, arg1)
@@ -1617,10 +1583,10 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 		To avoid setting the currently shown map again, which would hide the quest details,
 		skip updating after a WORLD_MAP_UPDATE event happened
 		--]]
-		if not skipNextUpdate then
+		if not BWQ.skipNextUpdate then
 			BWQ:RunUpdate()
 		end
-		skipNextUpdate = false
+		BWQ.skipNextUpdate = false
 	elseif event == "QUEST_WATCH_LIST_CHANGED" then
 		BWQ:UpdateBlock()
 	elseif event == "CHAT_MSG_COMBAT_FACTION_CHANGE" then
@@ -1670,7 +1636,7 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			end
 		end)
 		hooksecurefunc(WorldMapFrame, "OnMapChanged", function(self)
-			skipNextUpdate = true
+			BWQ.skipNextUpdate = true
 			local mapId = WorldMapFrame:GetMapID()
 			if BWQ.currentMapId and BWQ.currentMapId ~= mapId then
 				BWQ.mapTextures.animationGroup:Stop()
@@ -1738,8 +1704,8 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 end)
 
 -- data broker object
-local ldb = LibStub("LibDataBroker-1.1")
-BWQ.WorldQuestsBroker = ldb:NewDataObject("WorldQuests", {
+---local ldb = LibStub("LibDataBroker-1.1")
+BWQ.WorldQuestsBroker = LibStub("LibDataBroker-1.1"):NewDataObject("WorldQuests", {
 	type = "data source",
 	text = "World Quests",
 	icon = "Interface\\ICONS\\Achievement_Dungeon_Outland_DungeonMaster",
