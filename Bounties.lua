@@ -70,7 +70,7 @@ function BWQ:UpdateBountyData()
 											title,
 											numFulfilled or 0,
 											numRequired or 0,
-											FormatTimeLeftString(timeleft)
+											BWQ:FormatTimeLeftString(timeleft)
 										))
 			bountyCacheItem.icon:SetTexture(bounty.icon)
 			if bountyIndex == 1 then
