@@ -1,3 +1,6 @@
+### 11.0.2.18
+* Added support for City of Threads World Quests
+
 ### 11.0.2.17
 * Fixed bug:  https://github.com/Amadeus-/Broker_WorldQuests/issues/21
 

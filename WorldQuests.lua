@@ -1702,28 +1702,3 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 		end
 	end
 end)
-
--- data broker object
-BWQ.WorldQuestsBroker = LibStub("LibDataBroker-1.1"):NewDataObject("WorldQuests", {
-	type = "data source",
-	text = "World Quests",
-	icon = "Interface\\ICONS\\Achievement_Dungeon_Outland_DungeonMaster",
-	OnEnter = function(self)
-		if not BWQ:C("showOnClick") then
-			BWQ:AttachToBlock(self)
-		end
-	end,
-	OnLeave = function() BWQ:Block_OnLeave() end,
-	OnClick = function(self, button)
-		if button == "LeftButton" then
-			if BWQ:C("showOnClick") then
-				BWQ:AttachToBlock(self)
-			else
-				BWQ:RunUpdate()
-			end
-		elseif button == "RightButton" then
-			BWQ:Block_OnLeave()
-			BWQ:OpenConfigMenu(self)
-		end
-	end,
-})
