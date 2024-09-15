@@ -1174,9 +1174,8 @@ function BWQ:UpdateBlock()
 
 		if not BWQ:C("collapsedZones")[mapId] then 
 			for _, questId in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
-				local button
+				local button = nil
 				if buttonIndex > #BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons then
-
 					button = CreateFrame("Button", nil, BWQ)
 					button:RegisterForClicks("AnyUp")
 
@@ -1375,15 +1374,24 @@ function BWQ:UpdateBlock()
 				-- if button.quest.tagId == 136 or button.quest.tagId == 111 or button.quest.tagId == 112 then
 				--button.icon:SetTexCoord(.81, .84, .68, .79) -- skull tex coords
 				if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
-					button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId], true)
+					button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon, true)
 					button.icon:SetAlpha(1)
+					button.icon:SetSize(12, 12)
+					
+					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border then
+						button.iconBorder = button:CreateTexture(nil, "BORDER")
+						button.iconBorder:SetSize(12, 12)
+						button.iconBorder:SetScale(0.70)
+						button.iconBorder:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border, true)
+						button.iconBorder:SetAlpha(1)
+					end
 				else
 					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 and button.quest.tagId ~= 109 then	-- 109 is just your standard world quest
 						print(string.format("[BWQ] Unhandled Quest TagId: %d (%s)", button.quest.tagId, button.quest.title))
 					end
 					button.icon:SetAlpha(0)
+					button.icon:SetSize(12, 12)
 				end
-				button.icon:SetSize(12, 12)
 
 				-- Set the first cell of the row (the quest title/name)
 				button.titleFS:SetText(string.format("%s%s%s|r",
@@ -1428,6 +1436,9 @@ function BWQ:UpdateBlock()
 				button.title:SetHeight(button.titleFS:GetStringHeight())
 
 				button.icon:SetPoint("LEFT", button, "LEFT", 5, 0)
+				if button.iconBorder then
+					button.iconBorder:SetPoint("CENTER", button.icon, "CENTER", 0, 0)
+				end
 				button.titleFS:SetPoint("LEFT", button.icon, "RIGHT", 5, 0)
 				button.title:SetPoint("LEFT", button.titleFS, "LEFT", 0, 0)
 				button.rewardFS:SetPoint("LEFT", button.titleFS, "RIGHT", 10, 0)
