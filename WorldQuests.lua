@@ -1197,7 +1197,6 @@ function BWQ:UpdateBlock()
 					button:SetScript("OnClick", function(self)			Row_OnClick(button)														end)
 
 					button.icon = button:CreateTexture()
-					button.icon:SetTexture("Interface\\QUESTFRAME\\WorldQuest")
 					button.icon:SetSize(12, 12)
 
 					-- create font strings
@@ -1371,26 +1370,31 @@ function BWQ:UpdateBlock()
 					end
 				end
 
-				-- if button.quest.tagId == 136 or button.quest.tagId == 111 or button.quest.tagId == 112 then
-				--button.icon:SetTexCoord(.81, .84, .68, .79) -- skull tex coords
+				-- Set row icon based on quest.tagID
 				if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
 					button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon, true)
 					button.icon:SetAlpha(1)
 					button.icon:SetSize(12, 12)
-					
+					--[[ Disabling for now -- needs additional work/testing  (TODO)
 					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border then
+						print(string.format("[BWQ] Creating border icon for '%s'", button.quest.title))
 						button.iconBorder = button:CreateTexture(nil, "BORDER")
 						button.iconBorder:SetSize(12, 12)
 						button.iconBorder:SetScale(0.70)
 						button.iconBorder:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border, true)
 						button.iconBorder:SetAlpha(1)
 					end
+					]]
 				else
 					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 and button.quest.tagId ~= 109 then	-- 109 is just your standard world quest
 						print(string.format("[BWQ] Unhandled Quest TagId: %d (%s)", button.quest.tagId, button.quest.title))
 					end
 					button.icon:SetAlpha(0)
-					button.icon:SetSize(12, 12)
+					--[[ Disabling for now -- needs additional work/testing  (TODO)
+					if button.iconBorder then
+						button.iconBorder:SetAlpha(0)
+					end
+					]]
 				end
 
 				-- Set the first cell of the row (the quest title/name)
@@ -1436,9 +1440,11 @@ function BWQ:UpdateBlock()
 				button.title:SetHeight(button.titleFS:GetStringHeight())
 
 				button.icon:SetPoint("LEFT", button, "LEFT", 5, 0)
+				--[[ Disabling for now -- needs additional work/testing  (TODO)
 				if button.iconBorder then
 					button.iconBorder:SetPoint("CENTER", button.icon, "CENTER", 0, 0)
 				end
+				]]
 				button.titleFS:SetPoint("LEFT", button.icon, "RIGHT", 5, 0)
 				button.title:SetPoint("LEFT", button.titleFS, "LEFT", 0, 0)
 				button.rewardFS:SetPoint("LEFT", button.titleFS, "RIGHT", 10, 0)
