@@ -1,5 +1,7 @@
 ### 11.0.2.19
-* TWW Epic PvP type world quests now have the appropriate icon at the front
+* Tom Tom is now an optional dependency (i.e., the Tom Tom addon is 
+  no longer required.)
+* TWW Epic PvP type world quests now have the pvp icon at the front
   of the row, similar to pet battles, etc.
 
 ### 11.0.2.18

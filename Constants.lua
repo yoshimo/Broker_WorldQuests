@@ -114,7 +114,7 @@ CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
 	[260] = { icon = UnitFactionGroup("player") == "Horde" and "worldquest-icon-horde" or "worldquest-icon-alliance" },
 	[278] = { icon = "worldquest-icon-pvp-ffa", border = "worldquest-questmarker-dragon" },
 	[281] = { icon = "worldquest-icon-race" },
-	[286] = { icon = "worldquest-Capstone-questmarker-epic-Toast" },
+	[286] = { icon = "worldquest-Capstone-questmarker-epic-Toast", border = "worldquest-questmarker-dragon" },
 	[289] = { icon = "worldquest-icon-boss" },
 }
 
