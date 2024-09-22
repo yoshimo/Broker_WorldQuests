@@ -269,549 +269,551 @@ local RetrieveWorldQuests = function(mapId)
 			if DebugRetrieveWQ then
 				print(string.format("[BWQ] questList.%d: ID: %s (mapId: %d)", i, tostring(q.questId), mapId))
 			end
-			if HaveQuestData(q.questId) and q.mapID == mapId then 
-				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
-				questTagInfo = C_QuestLog.GetQuestTagInfo(q.questId)
+			if q and q.questId then
+				if HaveQuestData(q.questId) and q.mapID == mapId then 
+					timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
+					questTagInfo = C_QuestLog.GetQuestTagInfo(q.questId)
 
-				if DebugRetrieveWQ then
-					local _title, _factionId = C_TaskQuest.GetQuestInfoByQuestID(q.questId)
-					print(string.format("[BWQ] questList.%d: %s", i, _title))
-					if _factionId then print(string.format("[BWQ] questList.%d: faction: %d (%s)", i, _factionId, C_Reputation.GetFactionDataByID(_factionId).name)) end
-					if questTagInfo then print(string.format("[BWQ] questList.%d: WorldQuestType: %d", i, questTagInfo.worldQuestType)) end
-				end
-
-				if questTagInfo and questTagInfo.worldQuestType then
-					local questId = q.questId
-					table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
-					local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
-
-					if not quest.timeAdded then
-						quest.wasSaved = BWQ.questIds[questId] ~= nil
-					end
-					quest.timeAdded = quest.timeAdded or currentTime
-					if quest.wasSaved or currentTime - quest.timeAdded > 900 then
-						quest.isNew = false
-					else
-						quest.isNew = true
+					if DebugRetrieveWQ then
+						local _title, _factionId = C_TaskQuest.GetQuestInfoByQuestID(q.questId)
+						print(string.format("[BWQ] questList.%d: %s", i, _title))
+						if _factionId then print(string.format("[BWQ] questList.%d: faction: %d (%s)", i, _factionId, C_Reputation.GetFactionDataByID(_factionId).name)) end
+						if questTagInfo then print(string.format("[BWQ] questList.%d: WorldQuestType: %d", i, questTagInfo.worldQuestType)) end
 					end
 
-					quest.hide = true
-					quest.sort = 0
+					if questTagInfo and questTagInfo.worldQuestType then
+						local questId = q.questId
+						table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
+						local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
 
-					-- C_TaskQuest.GetQuestsForPlayerByMapID fields
-					quest.questId = questId
-					quest.numObjectives = q.numObjectives
-					quest.xFlight = q.x
-					quest.yFlight = q.y
-
-					-- C_QuestLog.GetQuestTagInfo fields
-					quest.tagId = questTagInfo.tagID
-					quest.worldQuestType = questTagInfo.worldQuestType
-					quest.quality = questTagInfo.quality
-					quest.isElite = questTagInfo.isElite
-
-					title, factionId = C_TaskQuest.GetQuestInfoByQuestID(quest.questId)
-					quest.title = title
-					quest.factionId = factionId
-					if factionId then
-						quest.faction = C_Reputation.GetFactionDataByID(factionId).name
-					end
-					quest.timeLeft = timeLeft
-					quest.bounties = {}
-
-					quest.reward = {}
-					local rewardType = {}
-					local hasReward = false
-					
-					-- item reward
-					if GetNumQuestLogRewards(quest.questId) > 0 then
-						local itemName, itemTexture, quantity, quality, isUsable, itemId = GetQuestLogRewardInfo(1, quest.questId)
-						if itemName then
-							hasReward = true
-							quest.reward.itemTexture = itemTexture
-							quest.reward.itemId = itemId
-							quest.reward.itemQuality = quality
-							quest.reward.itemQuantity = quantity
-							quest.reward.itemName = itemName
-							--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s", quest.questId, quest.title, itemName, itemId, quantity))    -- for debugging
-							
-							local _, _, _, _, _, _, _, _, equipSlot, _, _, classId, subClassId = GetItemInfo(quest.reward.itemId)
-							if classId == 7 then
-								quest.sort = quest.sort > CONSTANTS.SORT_ORDER.PROFESSION and quest.sort or CONSTANTS.SORT_ORDER.PROFESSION
-								if quest.reward.itemId == 124124 then
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.BLOODOFSARGERAS
-								end
-								if BWQ:C("showItems") and BWQ:C("showCraftingMaterials") then quest.hide = false end
-							elseif equipSlot ~= "" or itemId == 163857 --[[ Azerite Armor Cache ]] then
-								quest.sort = quest.sort > CONSTANTS.SORT_ORDER.EQUIP and quest.sort or CONSTANTS.SORT_ORDER.EQUIP
-								quest.reward.realItemLevel = BWQ:GetItemLevelValueForQuestId(quest.questId)
-								rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.GEAR
-								if BWQ:C("showItems") and BWQ:C("showGear") then quest.hide = false end
-							elseif C_Soulbinds.IsItemConduitByItemInfo(itemId) == true then
-								if BWQ:C("showConduits") then quest.hide = false end
-							elseif C_Item.IsAnimaItemByID(itemId) == true then
-								if BWQ:C("showAnima") then quest.hide = false end
-							elseif itemId == 137642 then -- mark of honor
-								quest.sort = quest.sort > CONSTANTS.SORT_ORDER.ITEM and quest.sort or CONSTANTS.SORT_ORDER.ITEM
-								rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MARK_OF_HONOR
-								if BWQ:C("showItems") and BWQ:C("showMarkOfHonor") then quest.hide = false end
-							elseif itemId == 163036 then -- polished pet charm
-								quest.reward.polishedPetCharmsAmount = quest.reward.itemQuantity
-								rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.POLISHED_PET_CHARM
-							else
-								quest.sort = quest.sort > CONSTANTS.SORT_ORDER.ITEM and quest.sort or CONSTANTS.SORT_ORDER.ITEM
-								rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
-								if BWQ:C("showItems") and BWQ:C("showOtherItems") then quest.hide = false end
-							end
+						if not quest.timeAdded then
+							quest.wasSaved = BWQ.questIds[questId] ~= nil
 						end
-					end
-					-- gold reward
-					local money = GetQuestLogRewardMoney(quest.questId);
-					if money > 20000 then -- >2g, hides these silly low gold extra rewards
-						hasReward = true
-						quest.reward.money = floor(BWQ:ValueWithWarModeBonus(quest.questId, money) / 10000) * 10000
-						quest.sort = quest.sort > CONSTANTS.SORT_ORDER.MONEY and quest.sort or CONSTANTS.SORT_ORDER.MONEY
-						rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MONEY
-
-						if money < 1000000 then
-							if BWQ:C("showLowGold") then quest.hide = false end
+						quest.timeAdded = quest.timeAdded or currentTime
+						if quest.wasSaved or currentTime - quest.timeAdded > 900 then
+							quest.isNew = false
 						else
-							if BWQ:C("showHighGold") then quest.hide = false end
+							quest.isNew = true
 						end
-					end
-					-- honor reward
-					local honor = GetQuestLogRewardHonor(quest.questId)
-					if honor > 0 then
-						hasReward = true
-						quest.reward.honor = honor
-						quest.sort = quest.sort > CONSTANTS.SORT_ORDER.HONOR and quest.sort or CONSTANTS.SORT_ORDER.HONOR
-						rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.HONOR
 
-						if BWQ:C("showHonor") then quest.hide = false end
-					end
-					-- currency reward
-					local rewardCurrencies = C_QuestInfoSystem.GetQuestRewardCurrencies(quest.questId)	
-					if rewardCurrencies then
-						quest.reward.currencies = {}
-						for i, currencyInfo in ipairs(rewardCurrencies) do
-							local name = currencyInfo.name
-							local texture = currencyInfo.texture
-							local numItems = currencyInfo.totalRewardAmount
-							local currencyId = currencyInfo.currencyID
-							--print(string.format("[BWQ] QuestID: %d", quest.questId))														-- Debugging
-							--print(string.format("[BWQ] - currencyInfo: %d - %s - %d - %d - %d", i, name, texture, numItems, currencyId))	-- Debugging
-							if name then
+						quest.hide = true
+						quest.sort = 0
+
+						-- C_TaskQuest.GetQuestsForPlayerByMapID fields
+						quest.questId = questId
+						quest.numObjectives = q.numObjectives
+						quest.xFlight = q.x
+						quest.yFlight = q.y
+
+						-- C_QuestLog.GetQuestTagInfo fields
+						quest.tagId = questTagInfo.tagID
+						quest.worldQuestType = questTagInfo.worldQuestType
+						quest.quality = questTagInfo.quality
+						quest.isElite = questTagInfo.isElite
+
+						title, factionId = C_TaskQuest.GetQuestInfoByQuestID(quest.questId)
+						quest.title = title
+						quest.factionId = factionId
+						if factionId then
+							quest.faction = C_Reputation.GetFactionDataByID(factionId).name
+						end
+						quest.timeLeft = timeLeft
+						quest.bounties = {}
+
+						quest.reward = {}
+						local rewardType = {}
+						local hasReward = false
+						
+						-- item reward
+						if GetNumQuestLogRewards(quest.questId) > 0 then
+							local itemName, itemTexture, quantity, quality, isUsable, itemId = GetQuestLogRewardInfo(1, quest.questId)
+							if itemName then
 								hasReward = true
-								local currency = {}
-								if CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE[currencyId] then
-									currency.amount = BWQ:ValueWithWarModeBonus(quest.questId, numItems)
+								quest.reward.itemTexture = itemTexture
+								quest.reward.itemId = itemId
+								quest.reward.itemQuality = quality
+								quest.reward.itemQuantity = quantity
+								quest.reward.itemName = itemName
+								--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s", quest.questId, quest.title, itemName, itemId, quantity))    -- for debugging
+								
+								local _, _, _, _, _, _, _, _, equipSlot, _, _, classId, subClassId = GetItemInfo(quest.reward.itemId)
+								if classId == 7 then
+									quest.sort = quest.sort > CONSTANTS.SORT_ORDER.PROFESSION and quest.sort or CONSTANTS.SORT_ORDER.PROFESSION
+									if quest.reward.itemId == 124124 then
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.BLOODOFSARGERAS
+									end
+									if BWQ:C("showItems") and BWQ:C("showCraftingMaterials") then quest.hide = false end
+								elseif equipSlot ~= "" or itemId == 163857 --[[ Azerite Armor Cache ]] then
+									quest.sort = quest.sort > CONSTANTS.SORT_ORDER.EQUIP and quest.sort or CONSTANTS.SORT_ORDER.EQUIP
+									quest.reward.realItemLevel = BWQ:GetItemLevelValueForQuestId(quest.questId)
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.GEAR
+									if BWQ:C("showItems") and BWQ:C("showGear") then quest.hide = false end
+								elseif C_Soulbinds.IsItemConduitByItemInfo(itemId) == true then
+									if BWQ:C("showConduits") then quest.hide = false end
+								elseif C_Item.IsAnimaItemByID(itemId) == true then
+									if BWQ:C("showAnima") then quest.hide = false end
+								elseif itemId == 137642 then -- mark of honor
+									quest.sort = quest.sort > CONSTANTS.SORT_ORDER.ITEM and quest.sort or CONSTANTS.SORT_ORDER.ITEM
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MARK_OF_HONOR
+									if BWQ:C("showItems") and BWQ:C("showMarkOfHonor") then quest.hide = false end
+								elseif itemId == 163036 then -- polished pet charm
+									quest.reward.polishedPetCharmsAmount = quest.reward.itemQuantity
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.POLISHED_PET_CHARM
 								else
-									currency.amount = numItems
-								end
-								currency.name = string.format("%d %s", currency.amount, name)
-								currency.texture = texture
-
-								--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s - %s - %s", quest.questId, quest.title, name, currencyId, currency.name, currency.texture, currency.amount))    -- for debugging
-
-								if currencyId == 1553 then -- azerite
-									currency.name = string.format("|cffe5cc80[%d %s]|r", currency.amount, name)
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ARTIFACTPOWER
-									quest.reward.azeriteAmount = currency.amount -- todo: improve broker text values?
-									if BWQ:C("showArtifactPower") then quest.hide = false end
-								elseif CONSTANTS.THEWARWITHIN_REPUTATION_CURRENCY_IDS[currencyId] then
-									currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
+									quest.sort = quest.sort > CONSTANTS.SORT_ORDER.ITEM and quest.sort or CONSTANTS.SORT_ORDER.ITEM
 									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
-									if BWQ:C("showTWWReputation") then quest.hide = false end
-								elseif CONSTANTS.DRAGONFLIGHT_REPUTATION_CURRENCY_IDS[currencyId] then
-									currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
-									if BWQ:C("showDFReputation") then quest.hide = false end
-								elseif CONSTANTS.SHADOWLANDS_REPUTATION_CURRENCY_IDS[currencyId] then
-									currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
-									if BWQ:C("showSLReputation") then quest.hide = false end
-								elseif CONSTANTS.BFA_REPUTATION_CURRENCY_IDS[currencyId] then
-									currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
-									if BWQ:C("showBFAReputation") then quest.hide = false end
-								elseif currencyId == 1560 then -- war resources
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WAR_RESOURCES
-									quest.reward.warResourceAmount = currency.amount
-									if BWQ:C("showWarResources") then quest.hide = false end
-								elseif currencyId == 1716 or currencyId == 1717 then -- service medals
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.SERVICE_MEDAL
-									quest.reward.serviceMedalAmount = currency.amount
-									if BWQ:C("showBFAServiceMedals") then quest.hide = false end
-								elseif currencyId == 1220 then -- order hall resources
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.RESOURCES
-									quest.reward.resourceAmount = currency.amount
-									if BWQ:C("showResources") then quest.hide = false end
-								elseif currencyId == 1342 then -- legionfall supplies
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.LEGIONFALL_SUPPLIES
-									quest.reward.legionfallSuppliesAmount = currency.amount
-									if BWQ:C("showLegionfallSupplies") then quest.hide = false end
-								elseif currencyId == 1226 then -- nethershard
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.NETHERSHARD
-									if BWQ:C("showNethershards") then quest.hide = false end
-								elseif currencyId == 1508 then -- argunite
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ARGUNITE
-									if BWQ:C("showArgunite") then quest.hide = false end
-								elseif currencyId == 1533 then
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WAKENING_ESSENCE
-									quest.reward.wakeningEssencesAmount = currency.amount
-									if BWQ:C("showWakeningEssences") then quest.hide = false end
-								elseif currencyId == 1721 then -- prismatic manapearl
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.PRISMATIC_MANAPEARL
-									quest.reward.prismaticManapearlAmount = currency.amount
-									if BWQ:C("showPrismaticManapearl") then quest.hide = false end
-								elseif currencyId == 1979 then -- cyphers of the first ones (Zereth Mortis - 9.2)
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.CYPHERS_OF_THE_FIRST_ONES
-									quest.reward.cyphersOfTheFirstOnesAmount = currency.amount
-									if BWQ:C("showCyphersOfTheFirstOnes") then quest.hide = false end
-								elseif currencyId == 1885 then -- grateful offering
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.GRATEFUL_OFFERING
-									quest.reward.gratefulOfferingAmount = currency.amount
-									if BWQ:C("showGratefulOffering") then quest.hide = false end
-								elseif currencyId == 2123 then -- bloody tokens
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.BLOODY_TOKENS
-									quest.reward.bloodyTokensAmount = currency.amount
-									if BWQ:C("showBloodyTokens") then quest.hide = false end
-								elseif currencyId == 2003 then -- dragon isles supplies
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.DRAGON_ISLES_SUPPLIES
-									quest.reward.dragonIslesSuppliesAmount = currency.amount
-									if BWQ:C("showDragonIslesSupplies") then quest.hide = false end
-								elseif currencyId == 2118 then -- elemental overflow
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ELEMENTAL_OVERFLOW
-									quest.reward.elementalOverflowAmount = currency.amount
-									if BWQ:C("showElementalOverflow") then quest.hide = false end
-								elseif currencyId == 2245 then -- flightstones
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.FLIGHTSTONES
-									quest.reward.flightstonesAmount = currency.amount
-									if BWQ:C("showFlightstones") then quest.hide = false end
-								elseif currencyId == 2706 then -- Whelplings Dreaming Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WHELPLINGS_DREAMING_CREST
-									quest.reward.WhelplingsDreamingCrestAmount = currency.amount
-									if BWQ:C("showWhelplingsDreamingCrest") then quest.hide = false end
-								elseif currencyId == 2707 then -- Drakes Dreaming Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.DRAKES_DREAMING_CREST
-									quest.reward.DrakesDreamingCrestAmount = currency.amount
-									if BWQ:C("showDrakesDreamingCrest") then quest.hide = false end
-								elseif currencyId == 2708 then -- Wyrms Dreaming Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WYRMS_DREAMING_CREST
-									quest.reward.WyrmsDreamingCrestAmount = currency.amount
-									if BWQ:C("showWyrmsDreamingCrest") then quest.hide = false end
-								elseif currencyId == 2709 then -- Aspects Dreaming Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ASPECTS_DREAMING_CREST
-									quest.reward.AspectsDreamingCrestAmount = currency.amount
-									if BWQ:C("showAspectsDreamingCrest") then quest.hide = false end
-								elseif currencyId == 2806 then -- Whelplings Awakened Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WHELPLINGS_Awakened_CREST
-									quest.reward.WhelplingsAwakenedCrestAmount = currency.amount
-									if BWQ:C("showWhelplingsAwakenedCrest") then quest.hide = false end
-								elseif currencyId == 2807 then -- Drakes Awakened Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.DRAKES_Awakened_CREST
-									quest.reward.DrakesAwakenedCrestAmount = currency.amount
-									if BWQ:C("showDrakesAwakenedCrest") then quest.hide = false end
-								elseif currencyId == 2809 then -- Wyrms Awakened Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WYRMS_Awakened_CREST
-									quest.reward.WyrmsAwakenedCrestAmount = currency.amount
-									if BWQ:C("showWyrmsAwakenedCrest") then quest.hide = false end
-								elseif currencyId == 2812 then -- Aspects Awakened Crest
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ASPECTS_Awakened_CREST
-									quest.reward.AspectsAwakenedCrestAmount = currency.amount
-									if BWQ:C("showAspectsAwakenedCrest") then quest.hide = false end
-								elseif currencyId == 2657 then -- Mysterious Fragment
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MYSTERIOUS_FRAGMENT
-									quest.reward.MysteriousFragmentAmount = currency.amount
-									if BWQ:C("showMysteriousFragment") then quest.hide = false end
-								elseif currencyId == 2815 then -- Resonance Crystals
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.RESONANCE_CRYSTALS
-									quest.reward.ResonanceCrystalsAmount = currency.amount
-									if BWQ:C("showResonanceCrystals") then quest.hide = false end
-								elseif currencyId == 2902 then -- The Assembly of the Deeps
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_ASSEMBLY_OF_THE_DEEPS
-									quest.reward.TheAssemblyoftheDeepsAmount = currency.amount
-									if BWQ:C("showTheAssemblyoftheDeeps") then quest.hide = false end
-								elseif currencyId == 2899 then -- Hallowfall Arathi
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.HALLOWFALL_ARATHI
-									quest.reward.HallowfallArathiAmount = currency.amount
-									if BWQ:C("showHallowfallArathi") then quest.hide = false end
-								elseif currencyId == 3008 then -- Valorstones
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.VALORSTONES
-									quest.reward.ValorstonesAmount = currency.amount
-									if BWQ:C("showValorstones") then quest.hide = false end
-								elseif currencyId == 3056 then -- Kej
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.KEJ
-									quest.reward.KejAmount = currency.amount
-									if BWQ:C("showKej") then quest.hide = false end
-								elseif currencyId == 2897 then -- Council of Dornogal
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL
-									quest.reward.CouncilofDornogalAmount = currency.amount
-									if BWQ:C("showCouncilofDornogal") then quest.hide = false end
-								elseif currencyId == 3002 then -- The Weaver
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_WEAVER
-									quest.reward.TheWeaverAmount = currency.amount
-									if BWQ:C("showTheWeaver") then quest.hide = false end
-								elseif currencyId == 3003 then -- The General
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_GENERAL
-									quest.reward.TheGeneralAmount = currency.amount
-									if BWQ:C("showTheGeneral") then quest.hide = false end
-								elseif currencyId == 3004 then -- The Vizier
-									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_VIZIER
-									quest.reward.TheVizierAmount = currency.amount
-									if BWQ:C("showTheVizier") then quest.hide = false end																		
-								else 
-									if BWQcfg.spewDebugInfo then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
-								end
-								quest.reward.currencies[#quest.reward.currencies + 1] = currency
-
-								if currencyId == 1553 then
-									quest.sort = quest.sort > CONSTANTS.SORT_ORDER.ARTIFACTPOWER and quest.sort or CONSTANTS.SORT_ORDER.ARTIFACTPOWER
-								else
-									quest.sort = quest.sort > CONSTANTS.SORT_ORDER.RESOURCES and quest.sort or CONSTANTS.SORT_ORDER.RESOURCES
+									if BWQ:C("showItems") and BWQ:C("showOtherItems") then quest.hide = false end
 								end
 							end
 						end
-					end
-					-- xp reward [Only show if XP is the only reward (i.e., if none of the above are rewards)]
-					if not hasReward then
-						local xp = GetQuestLogRewardXP(quest.questId)
-						if xp > 0 then
+						-- gold reward
+						local money = GetQuestLogRewardMoney(quest.questId);
+						if money > 20000 then -- >2g, hides these silly low gold extra rewards
 							hasReward = true
-							quest.reward.xp = xp
-							quest.sort = quest.sort > CONSTANTS.SORT_ORDER.XP and quest.sort or CONSTANTS.SORT_ORDER.XP
-							rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.XP
-							
-							if BWQ:C("showXP") then quest.hide = false end
-						end
-					end
-					if BWQcfg.spewDebugInfo and not hasReward and not HaveQuestData(quest.questId) then
-						print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questId, quest.title))
-					end
-					if not hasReward then BWQ.needsRefresh = true end -- in most cases no reward means api returned incomplete data
-					
-					for _, bounty in ipairs(BWQ.bounties) do
-						if C_QuestLog.IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
-							quest.bounties[#quest.bounties + 1] = bounty.icon
-						end
-					end
-					local questType = {}
+							quest.reward.money = floor(BWQ:ValueWithWarModeBonus(quest.questId, money) / 10000) * 10000
+							quest.sort = quest.sort > CONSTANTS.SORT_ORDER.MONEY and quest.sort or CONSTANTS.SORT_ORDER.MONEY
+							rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MONEY
 
-					-- quest type filters
-					if quest.worldQuestType == Enum.QuestTagType.PetBattle then
-						if BWQ:C("showPetBattle") or (BWQ:C("alwaysShowPetBattleFamilyFamiliar") and CONSTANTS.FAMILY_FAMILIAR_QUEST_IDS[quest.questId] ~= nil) then
-							quest.hide = false
-						else
-							quest.hide = true
-						end
-
-						quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[BWQ.expansion], quest.questId)
-					elseif quest.worldQuestType == Enum.QuestTagType.Profession then
-						if BWQ:C("showProfession") then
-
-							if quest.tagId == 119 then
-								questType[#questType+1] = CONSTANTS.QUEST_TYPES.HERBALISM
-								if BWQ:C("showProfessionHerbalism")	then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 120 then
-								questType[#questType+1] = CONSTANTS.QUEST_TYPES.MINING
-								if BWQ:C("showProfessionMining") then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 130 then
-								questType[#questType+1] = CONSTANTS.QUEST_TYPES.FISHING
-								quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.LEGION_FISHING_WQ, quest.questId)
-								if BWQ:C("showProfessionFishing") then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 124 then
-								questType[#questType+1] = CONSTANTS.QUEST_TYPES.SKINNING
-								if BWQ:C("showProfessionSkinning") then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 118 then 	if BWQ:C("showProfessionAlchemy") 			then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 129 then	if BWQ:C("showProfessionArchaeology") 		then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 116 then 	if BWQ:C("showProfessionBlacksmithing") 	then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 131 then 	if BWQ:C("showProfessionCooking") 			then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 123 then 	if BWQ:C("showProfessionEnchanting") 		then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 122 then 	if BWQ:C("showProfessionEngineering") 		then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 126 then 	if BWQ:C("showProfessionInscription") 		then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 125 then 	if BWQ:C("showProfessionJewelcrafting") 	then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 117 then 	if BWQ:C("showProfessionLeatherworking") 	then quest.hide = false else quest.hide = true end
-							elseif quest.tagId == 121 then 	if BWQ:C("showProfessionTailoring") 		then quest.hide = false else quest.hide = true end
+							if money < 1000000 then
+								if BWQ:C("showLowGold") then quest.hide = false end
+							else
+								if BWQ:C("showHighGold") then quest.hide = false end
 							end
-						else
-							quest.hide = true
 						end
-					elseif not BWQ:C("showPvP") and quest.worldQuestType == Enum.QuestTagType.PvP then quest.hide = true
-					elseif not BWQ:C("showDungeon") and quest.worldQuestType == Enum.QuestTagType.Dungeon then quest.hide = true
-					elseif not BWQ:C("showDragonRiderRacing") and quest.worldQuestType == Enum.QuestTagType.DragonRiderRacing then quest.hide = true
-					end
+						-- honor reward
+						local honor = GetQuestLogRewardHonor(quest.questId)
+						if honor > 0 then
+							hasReward = true
+							quest.reward.honor = honor
+							quest.sort = quest.sort > CONSTANTS.SORT_ORDER.HONOR and quest.sort or CONSTANTS.SORT_ORDER.HONOR
+							rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.HONOR
 
-					-- only show quest that are blue or above quality
-					if (BWQ:C("onlyShowRareOrAbove") and quest.quality < 1) then quest.hide = true end
-
-					-- always show bounty quests or reputation for faction filter
-					if (BWQ:C("alwaysShowBountyQuests") and #quest.bounties > 0) or
-						-- Dragonflight
-						(BWQ:C("alwaysShowDragonscaleExpedition") and quest.factionId == 2507) or
-						(BWQ:C("alwaysShowIskaaraTuskarr") and quest.factionId == 2511) or
-						(BWQ:C("alwaysShowMaruukCentaur") and quest.factionId == 2503) or
-						(BWQ:C("alwaysShowValdrakkenAccord") and quest.factionId == 2510) or
-						(BWQ:C("alwaysShowLoammNiffen") and quest.factionId == 2564) or
-						(BWQ:C("alwaysShowDreamWardens") and quest.factionId == 2574) or
-						-- Shadowlands
-						(BWQ:C("alwaysShowAscended") and quest.factionId == 2407) or
-						(BWQ:C("alwaysShowUndyingArmy") and quest.factionId == 2410) or
-						(BWQ:C("alwaysShowCourtofHarvesters") and quest.factionId == 2413) or
-						(BWQ:C("alwaysShowAvowed") and quest.factionId == 2439) or
-						(BWQ:C("alwaysShowWildHunt") and quest.factionId == 2465) or
-						(BWQ:C("alwaysShowDeathsAdvance") and quest.factionId == 2470) or
-						(BWQ:C("alwaysShowEnlightened") and quest.factionId == 2478) or
-						-- bfa
-						(BWQ:C("alwaysShow7thLegion") and quest.factionId == 2159) or
-						(BWQ:C("alwaysShowStormsWake") and quest.factionId == 2162) or
-						(BWQ:C("alwaysShowOrderOfEmbers") and quest.factionId == 2161) or
-						(BWQ:C("alwaysShowProudmooreAdmiralty") and quest.factionId == 2160) or
-						(BWQ:C("alwaysShowTheHonorbound") and quest.factionId == 2157) or
-						(BWQ:C("alwaysShowZandalariEmpire") and quest.factionId == 2103) or
-						(BWQ:C("alwaysShowTalanjisExpedition") and quest.factionId == 2156) or
-						(BWQ:C("alwaysShowVoldunai") and quest.factionId == 2158) or
-						(BWQ:C("alwaysShowTortollanSeekers") and quest.factionId == 2163) or
-						(BWQ:C("alwaysShowChampionsOfAzeroth") and quest.factionId == 2164) or
-						-- 8.2 --
-						(BWQ:C("alwaysShowTheUnshackled") and quest.factionId == 2373) or
-						(BWQ:C("alwaysShowWavebladeAnkoan") and quest.factionId == 2400) or
-						(BWQ:C("alwaysShowRustboltResistance") and quest.factionId == 2391) or
-						-- legion
-						(BWQ:C("alwaysShowCourtOfFarondis") and (mapId == 630 or mapId == 790)) or
-						(BWQ:C("alwaysShowDreamweavers") and mapId == 641) or
-						(BWQ:C("alwaysShowHighmountainTribe") and mapId == 650) or
-						(BWQ:C("alwaysShowNightfallen") and mapId == 680) or
-						(BWQ:C("alwaysShowWardens") and quest.factionId == 1894) or
-						(BWQ:C("alwaysShowValarjar") and mapId == 634) or
-						(BWQ:C("alwaysShowArmiesOfLegionfall") and mapId == 646) or
-						(BWQ:C("alwaysShowArmyOfTheLight") and quest.factionId == 2165) or
-						(BWQ:C("alwaysShowArgussianReach") and quest.factionId == 2170) then
-
-						-- pet battle override
-						if BWQ:C("hidePetBattleBountyQuests") and not BWQ:C("showPetBattle") and quest.worldQuestType == Enum.QuestTagType.PetBattle then
-							quest.hide = true
-						else
-							quest.hide = false
+							if BWQ:C("showHonor") then quest.hide = false end
 						end
-					end
-					-- don't filter epic quests based on setting
-					if BWQ:C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == Enum.QuestTagType.Raid) then quest.hide = false end
+						-- currency reward
+						local rewardCurrencies = C_QuestInfoSystem.GetQuestRewardCurrencies(quest.questId)	
+						if rewardCurrencies then
+							quest.reward.currencies = {}
+							for i, currencyInfo in ipairs(rewardCurrencies) do
+								local name = currencyInfo.name
+								local texture = currencyInfo.texture
+								local numItems = currencyInfo.totalRewardAmount
+								local currencyId = currencyInfo.currencyID
+								--print(string.format("[BWQ] QuestID: %d", quest.questId))														-- Debugging
+								--print(string.format("[BWQ] - currencyInfo: %d - %s - %d - %d - %d", i, name, texture, numItems, currencyId))	-- Debugging
+								if name then
+									hasReward = true
+									local currency = {}
+									if CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE[currencyId] then
+										currency.amount = BWQ:ValueWithWarModeBonus(quest.questId, numItems)
+									else
+										currency.amount = numItems
+									end
+									currency.name = string.format("%d %s", currency.amount, name)
+									currency.texture = texture
 
-					BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+									--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s - %s - %s", quest.questId, quest.title, name, currencyId, currency.name, currency.texture, currency.amount))    -- for debugging
 
-					if not quest.hide then
-						numQuests = numQuests + 1
+									if currencyId == 1553 then -- azerite
+										currency.name = string.format("|cffe5cc80[%d %s]|r", currency.amount, name)
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ARTIFACTPOWER
+										quest.reward.azeriteAmount = currency.amount -- todo: improve broker text values?
+										if BWQ:C("showArtifactPower") then quest.hide = false end
+									elseif CONSTANTS.THEWARWITHIN_REPUTATION_CURRENCY_IDS[currencyId] then
+										currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
+										if BWQ:C("showTWWReputation") then quest.hide = false end
+									elseif CONSTANTS.DRAGONFLIGHT_REPUTATION_CURRENCY_IDS[currencyId] then
+										currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
+										if BWQ:C("showDFReputation") then quest.hide = false end
+									elseif CONSTANTS.SHADOWLANDS_REPUTATION_CURRENCY_IDS[currencyId] then
+										currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
+										if BWQ:C("showSLReputation") then quest.hide = false end
+									elseif CONSTANTS.BFA_REPUTATION_CURRENCY_IDS[currencyId] then
+										currency.name = string.format("%s: %d %s", name, currency.amount, REPUTATION)
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.IRRELEVANT
+										if BWQ:C("showBFAReputation") then quest.hide = false end
+									elseif currencyId == 1560 then -- war resources
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WAR_RESOURCES
+										quest.reward.warResourceAmount = currency.amount
+										if BWQ:C("showWarResources") then quest.hide = false end
+									elseif currencyId == 1716 or currencyId == 1717 then -- service medals
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.SERVICE_MEDAL
+										quest.reward.serviceMedalAmount = currency.amount
+										if BWQ:C("showBFAServiceMedals") then quest.hide = false end
+									elseif currencyId == 1220 then -- order hall resources
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.RESOURCES
+										quest.reward.resourceAmount = currency.amount
+										if BWQ:C("showResources") then quest.hide = false end
+									elseif currencyId == 1342 then -- legionfall supplies
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.LEGIONFALL_SUPPLIES
+										quest.reward.legionfallSuppliesAmount = currency.amount
+										if BWQ:C("showLegionfallSupplies") then quest.hide = false end
+									elseif currencyId == 1226 then -- nethershard
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.NETHERSHARD
+										if BWQ:C("showNethershards") then quest.hide = false end
+									elseif currencyId == 1508 then -- argunite
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ARGUNITE
+										if BWQ:C("showArgunite") then quest.hide = false end
+									elseif currencyId == 1533 then
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WAKENING_ESSENCE
+										quest.reward.wakeningEssencesAmount = currency.amount
+										if BWQ:C("showWakeningEssences") then quest.hide = false end
+									elseif currencyId == 1721 then -- prismatic manapearl
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.PRISMATIC_MANAPEARL
+										quest.reward.prismaticManapearlAmount = currency.amount
+										if BWQ:C("showPrismaticManapearl") then quest.hide = false end
+									elseif currencyId == 1979 then -- cyphers of the first ones (Zereth Mortis - 9.2)
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.CYPHERS_OF_THE_FIRST_ONES
+										quest.reward.cyphersOfTheFirstOnesAmount = currency.amount
+										if BWQ:C("showCyphersOfTheFirstOnes") then quest.hide = false end
+									elseif currencyId == 1885 then -- grateful offering
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.GRATEFUL_OFFERING
+										quest.reward.gratefulOfferingAmount = currency.amount
+										if BWQ:C("showGratefulOffering") then quest.hide = false end
+									elseif currencyId == 2123 then -- bloody tokens
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.BLOODY_TOKENS
+										quest.reward.bloodyTokensAmount = currency.amount
+										if BWQ:C("showBloodyTokens") then quest.hide = false end
+									elseif currencyId == 2003 then -- dragon isles supplies
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.DRAGON_ISLES_SUPPLIES
+										quest.reward.dragonIslesSuppliesAmount = currency.amount
+										if BWQ:C("showDragonIslesSupplies") then quest.hide = false end
+									elseif currencyId == 2118 then -- elemental overflow
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ELEMENTAL_OVERFLOW
+										quest.reward.elementalOverflowAmount = currency.amount
+										if BWQ:C("showElementalOverflow") then quest.hide = false end
+									elseif currencyId == 2245 then -- flightstones
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.FLIGHTSTONES
+										quest.reward.flightstonesAmount = currency.amount
+										if BWQ:C("showFlightstones") then quest.hide = false end
+									elseif currencyId == 2706 then -- Whelplings Dreaming Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WHELPLINGS_DREAMING_CREST
+										quest.reward.WhelplingsDreamingCrestAmount = currency.amount
+										if BWQ:C("showWhelplingsDreamingCrest") then quest.hide = false end
+									elseif currencyId == 2707 then -- Drakes Dreaming Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.DRAKES_DREAMING_CREST
+										quest.reward.DrakesDreamingCrestAmount = currency.amount
+										if BWQ:C("showDrakesDreamingCrest") then quest.hide = false end
+									elseif currencyId == 2708 then -- Wyrms Dreaming Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WYRMS_DREAMING_CREST
+										quest.reward.WyrmsDreamingCrestAmount = currency.amount
+										if BWQ:C("showWyrmsDreamingCrest") then quest.hide = false end
+									elseif currencyId == 2709 then -- Aspects Dreaming Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ASPECTS_DREAMING_CREST
+										quest.reward.AspectsDreamingCrestAmount = currency.amount
+										if BWQ:C("showAspectsDreamingCrest") then quest.hide = false end
+									elseif currencyId == 2806 then -- Whelplings Awakened Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WHELPLINGS_Awakened_CREST
+										quest.reward.WhelplingsAwakenedCrestAmount = currency.amount
+										if BWQ:C("showWhelplingsAwakenedCrest") then quest.hide = false end
+									elseif currencyId == 2807 then -- Drakes Awakened Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.DRAKES_Awakened_CREST
+										quest.reward.DrakesAwakenedCrestAmount = currency.amount
+										if BWQ:C("showDrakesAwakenedCrest") then quest.hide = false end
+									elseif currencyId == 2809 then -- Wyrms Awakened Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WYRMS_Awakened_CREST
+										quest.reward.WyrmsAwakenedCrestAmount = currency.amount
+										if BWQ:C("showWyrmsAwakenedCrest") then quest.hide = false end
+									elseif currencyId == 2812 then -- Aspects Awakened Crest
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.ASPECTS_Awakened_CREST
+										quest.reward.AspectsAwakenedCrestAmount = currency.amount
+										if BWQ:C("showAspectsAwakenedCrest") then quest.hide = false end
+									elseif currencyId == 2657 then -- Mysterious Fragment
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MYSTERIOUS_FRAGMENT
+										quest.reward.MysteriousFragmentAmount = currency.amount
+										if BWQ:C("showMysteriousFragment") then quest.hide = false end
+									elseif currencyId == 2815 then -- Resonance Crystals
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.RESONANCE_CRYSTALS
+										quest.reward.ResonanceCrystalsAmount = currency.amount
+										if BWQ:C("showResonanceCrystals") then quest.hide = false end
+									elseif currencyId == 2902 then -- The Assembly of the Deeps
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_ASSEMBLY_OF_THE_DEEPS
+										quest.reward.TheAssemblyoftheDeepsAmount = currency.amount
+										if BWQ:C("showTheAssemblyoftheDeeps") then quest.hide = false end
+									elseif currencyId == 2899 then -- Hallowfall Arathi
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.HALLOWFALL_ARATHI
+										quest.reward.HallowfallArathiAmount = currency.amount
+										if BWQ:C("showHallowfallArathi") then quest.hide = false end
+									elseif currencyId == 3008 then -- Valorstones
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.VALORSTONES
+										quest.reward.ValorstonesAmount = currency.amount
+										if BWQ:C("showValorstones") then quest.hide = false end
+									elseif currencyId == 3056 then -- Kej
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.KEJ
+										quest.reward.KejAmount = currency.amount
+										if BWQ:C("showKej") then quest.hide = false end
+									elseif currencyId == 2897 then -- Council of Dornogal
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL
+										quest.reward.CouncilofDornogalAmount = currency.amount
+										if BWQ:C("showCouncilofDornogal") then quest.hide = false end
+									elseif currencyId == 3002 then -- The Weaver
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_WEAVER
+										quest.reward.TheWeaverAmount = currency.amount
+										if BWQ:C("showTheWeaver") then quest.hide = false end
+									elseif currencyId == 3003 then -- The General
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_GENERAL
+										quest.reward.TheGeneralAmount = currency.amount
+										if BWQ:C("showTheGeneral") then quest.hide = false end
+									elseif currencyId == 3004 then -- The Vizier
+										rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_VIZIER
+										quest.reward.TheVizierAmount = currency.amount
+										if BWQ:C("showTheVizier") then quest.hide = false end																		
+									else 
+										if BWQcfg.spewDebugInfo then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
+									end
+									quest.reward.currencies[#quest.reward.currencies + 1] = currency
 
-						if rewardType then
-							for _, rtype in next, rewardType do
-								if rtype == CONSTANTS.REWARD_TYPES.POLISHED_PET_CHARM then
-									BWQ.totalPolishedPetCharms = BWQ.totalPolishedPetCharms + quest.reward.polishedPetCharmsAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.ARTIFACTPOWER and quest.reward.azeriteAmount then
-									BWQ.totalArtifactPower = BWQ.totalArtifactPower + (quest.reward.azeriteAmount or 0)
-								elseif rtype == CONSTANTS.REWARD_TYPES.WAKENING_ESSENCE and quest.reward.wakeningEssencesAmount then
-									BWQ.totalWakeningEssences = BWQ.totalWakeningEssences + quest.reward.wakeningEssencesAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.WAR_RESOURCES and quest.reward.warResourceAmount then
-									BWQ.totalWarResources = BWQ.totalWarResources + quest.reward.warResourceAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.SERVICE_MEDAL and quest.reward.serviceMedalAmount then
-									BWQ.totalServiceMedals = BWQ.totalServiceMedals + quest.reward.serviceMedalAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.RESOURCES and quest.reward.resourceAmount then
-									BWQ.totalResources = BWQ.totalResources + quest.reward.resourceAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.LEGIONFALL_SUPPLIES and quest.reward.legionfallSuppliesAmount then
-									BWQ.totalLegionfallSupplies = BWQ.totalLegionfallSupplies + quest.reward.legionfallSuppliesAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.XP and quest.reward.xp then
-									BWQ.totalXP = BWQ.totalXP + quest.reward.xp
-								elseif rtype == CONSTANTS.REWARD_TYPES.HONOR and quest.reward.honor then
-									BWQ.totalHonor = BWQ.totalHonor + quest.reward.honor
-								elseif rtype == CONSTANTS.REWARD_TYPES.MONEY and quest.reward.money then
-									BWQ.totalGold = BWQ.totalGold + quest.reward.money
-								elseif rtype == CONSTANTS.REWARD_TYPES.BLOODOFSARGERAS and quest.reward.itemQuantity then
-									BWQ.totalBloodOfSargeras = BWQ.totalBloodOfSargeras + quest.reward.itemQuantity
-								elseif rtype == CONSTANTS.REWARD_TYPES.GEAR then
-									BWQ.totalGear = BWQ.totalGear + 1
-								elseif rtype == CONSTANTS.REWARD_TYPES.MARK_OF_HONOR then
-									BWQ.totalMarkOfHonor = BWQ.totalMarkOfHonor + quest.reward.itemQuantity
-								elseif rtype == CONSTANTS.REWARD_TYPES.PRISMATIC_MANAPEARL then
-									BWQ.totalPrismaticManapearl = BWQ.totalPrismaticManapearl + quest.reward.prismaticManapearlAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.CYPHERS_OF_THE_FIRST_ONES then
-									BWQ.totalCyphersOfTheFirstOnes = BWQ.totalCyphersOfTheFirstOnes + quest.reward.cyphersOfTheFirstOnesAmount
-				 				elseif rtype == CONSTANTS.REWARD_TYPES.GRATEFUL_OFFERING then
-									BWQ.totalGratefulOffering = BWQ.totalGratefulOffering + quest.reward.gratefulOfferingAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.BLOODY_TOKENS then
-									BWQ.totalBloodyTokens = BWQ.totalBloodyTokens + quest.reward.bloodyTokensAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.DRAGON_ISLES_SUPPLIES then
-									BWQ.totalDragonIslesSupplies = BWQ.totalDragonIslesSupplies + quest.reward.dragonIslesSuppliesAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.ELEMENTAL_OVERFLOW then
-									BWQ.totalElementalOverflow = BWQ.totalElementalOverflow + quest.reward.elementalOverflowAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.FLIGHTSTONES then
-									BWQ.totalFlightstones = BWQ.totalFlightstones + quest.reward.flightstonesAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.WHELPLINGS_DREAMING_CREST then
-									BWQ.totalWhelplingsDreamingCrest = BWQ.totalWhelplingsDreamingCrest + quest.reward.WhelplingsDreamingCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.DRAKES_DREAMING_CREST then
-									BWQ.totalDrakesDreamingCrest = BWQ.totalDrakesDreamingCrest + quest.reward.DrakesDreamingCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.WYRMS_DREAMING_CREST then
-									BWQ.totalWyrmsDreamingCrest = BWQ.totalWyrmsDreamingCrest + quest.reward.WyrmsDreamingCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.ASPECTS_DREAMING_CREST then
-									BWQ.totalAspectsDreamingCrest = BWQ.totalAspectsDreamingCrest + quest.reward.AspectsDreamingCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.WHELPLINGS_Awakened_CREST then
-									BWQ.totalWhelplingsAwakenedCrest = BWQ.totalWhelplingsAwakenedCrest + quest.reward.WhelplingsAwakenedCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.DRAKES_Awakened_CREST then
-									BWQ.totalDrakesAwakenedCrest = BWQ.totalDrakesAwakenedCrest + quest.reward.DrakesAwakenedCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.WYRMS_Awakened_CREST then
-									BWQ.totalWyrmsAwakenedCrest = BWQ.totalWyrmsAwakenedCrest + quest.reward.WyrmsAwakenedCrestAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.ASPECTS_Awakened_CREST then
-									BWQ.totalAspectsAwakenedCrest = BWQ.totalAspectsAwakenedCrest + quest.reward.AspectsAwakenedCrestAmount	
-								elseif rtype == CONSTANTS.REWARD_TYPES.MYSTERIOUS_FRAGMENT then
-									BWQ.totalMysteriousFragment = BWQ.totalMysteriousFragment + quest.reward.MysteriousFragmentAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.RESONANCE_CRYSTALS then
-									BWQ.totalResonanceCrystals = BWQ.totalResonanceCrystals + quest.reward.ResonanceCrystalsAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.THE_ASSEMBLY_OF_THE_DEEPS then
-									BWQ.totalTheAssemblyOfTheDeeps = BWQ.totalTheAssemblyOfTheDeeps + quest.reward.TheAssemblyoftheDeepsAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.HALLOWFALL_ARATHI then
-									BWQ.totalHallowfallArathi = BWQ.totalHallowfallArathi + quest.reward.HallowfallArathiAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.VALORSTONES then
-									BWQ.totalValorstones = BWQ.totalValorstones + quest.reward.ValorstonesAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.KEJ then
-									BWQ.totalKej = BWQ.totalKej + quest.reward.KejAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL then
-									BWQ.totalCouncilofDornogal = BWQ.totalCouncilofDornogal + quest.reward.CouncilofDornogalAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.THE_WEAVER then
-									BWQ.totalTheWeaver = BWQ.totalTheWeaver + quest.reward.TheWeaverAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.THE_GENERAL then
-									BWQ.totalTheGeneral = BWQ.totalTheGeneral + quest.reward.TheGeneralAmount
-								elseif rtype == CONSTANTS.REWARD_TYPES.THE_VIZIER then
-									BWQ.totalTheVizier = BWQ.totalTheVizier + quest.reward.TheVizierAmount
+									if currencyId == 1553 then
+										quest.sort = quest.sort > CONSTANTS.SORT_ORDER.ARTIFACTPOWER and quest.sort or CONSTANTS.SORT_ORDER.ARTIFACTPOWER
+									else
+										quest.sort = quest.sort > CONSTANTS.SORT_ORDER.RESOURCES and quest.sort or CONSTANTS.SORT_ORDER.RESOURCES
+									end
 								end
 							end
 						end
-						if questType then
-							for _, qtype in next, questType do
-								if qtype == CONSTANTS.QUEST_TYPES.HERBALISM then
-									BWQ.totalHerbalism = BWQ.totalHerbalism + 1
-								elseif qtype == CONSTANTS.QUEST_TYPES.MINING then
-									BWQ.totalMining = BWQ.totalMining + 1
-								elseif qtype == CONSTANTS.QUEST_TYPES.FISHING then
-									BWQ.totalFishing = BWQ.totalFishing + 1
-								elseif qtype == CONSTANTS.QUEST_TYPES.SKINNING then
-									BWQ.totalSkinning = BWQ.totalSkinning + 1
+						-- xp reward [Only show if XP is the only reward (i.e., if none of the above are rewards)]
+						if not hasReward then
+							local xp = GetQuestLogRewardXP(quest.questId)
+							if xp > 0 then
+								hasReward = true
+								quest.reward.xp = xp
+								quest.sort = quest.sort > CONSTANTS.SORT_ORDER.XP and quest.sort or CONSTANTS.SORT_ORDER.XP
+								rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.XP
+								
+								if BWQ:C("showXP") then quest.hide = false end
+							end
+						end
+						if BWQcfg.spewDebugInfo and not hasReward and not HaveQuestData(quest.questId) then
+							print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questId, quest.title))
+						end
+						if not hasReward then BWQ.needsRefresh = true end -- in most cases no reward means api returned incomplete data
+						
+						for _, bounty in ipairs(BWQ.bounties) do
+							if C_QuestLog.IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
+								quest.bounties[#quest.bounties + 1] = bounty.icon
+							end
+						end
+						local questType = {}
+
+						-- quest type filters
+						if quest.worldQuestType == Enum.QuestTagType.PetBattle then
+							if BWQ:C("showPetBattle") or (BWQ:C("alwaysShowPetBattleFamilyFamiliar") and CONSTANTS.FAMILY_FAMILIAR_QUEST_IDS[quest.questId] ~= nil) then
+								quest.hide = false
+							else
+								quest.hide = true
+							end
+
+							quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[BWQ.expansion], quest.questId)
+						elseif quest.worldQuestType == Enum.QuestTagType.Profession then
+							if BWQ:C("showProfession") then
+
+								if quest.tagId == 119 then
+									questType[#questType+1] = CONSTANTS.QUEST_TYPES.HERBALISM
+									if BWQ:C("showProfessionHerbalism")	then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 120 then
+									questType[#questType+1] = CONSTANTS.QUEST_TYPES.MINING
+									if BWQ:C("showProfessionMining") then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 130 then
+									questType[#questType+1] = CONSTANTS.QUEST_TYPES.FISHING
+									quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.LEGION_FISHING_WQ, quest.questId)
+									if BWQ:C("showProfessionFishing") then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 124 then
+									questType[#questType+1] = CONSTANTS.QUEST_TYPES.SKINNING
+									if BWQ:C("showProfessionSkinning") then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 118 then 	if BWQ:C("showProfessionAlchemy") 			then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 129 then	if BWQ:C("showProfessionArchaeology") 		then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 116 then 	if BWQ:C("showProfessionBlacksmithing") 	then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 131 then 	if BWQ:C("showProfessionCooking") 			then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 123 then 	if BWQ:C("showProfessionEnchanting") 		then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 122 then 	if BWQ:C("showProfessionEngineering") 		then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 126 then 	if BWQ:C("showProfessionInscription") 		then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 125 then 	if BWQ:C("showProfessionJewelcrafting") 	then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 117 then 	if BWQ:C("showProfessionLeatherworking") 	then quest.hide = false else quest.hide = true end
+								elseif quest.tagId == 121 then 	if BWQ:C("showProfessionTailoring") 		then quest.hide = false else quest.hide = true end
+								end
+							else
+								quest.hide = true
+							end
+						elseif not BWQ:C("showPvP") and quest.worldQuestType == Enum.QuestTagType.PvP then quest.hide = true
+						elseif not BWQ:C("showDungeon") and quest.worldQuestType == Enum.QuestTagType.Dungeon then quest.hide = true
+						elseif not BWQ:C("showDragonRiderRacing") and quest.worldQuestType == Enum.QuestTagType.DragonRiderRacing then quest.hide = true
+						end
+
+						-- only show quest that are blue or above quality
+						if (BWQ:C("onlyShowRareOrAbove") and quest.quality < 1) then quest.hide = true end
+
+						-- always show bounty quests or reputation for faction filter
+						if (BWQ:C("alwaysShowBountyQuests") and #quest.bounties > 0) or
+							-- Dragonflight
+							(BWQ:C("alwaysShowDragonscaleExpedition") and quest.factionId == 2507) or
+							(BWQ:C("alwaysShowIskaaraTuskarr") and quest.factionId == 2511) or
+							(BWQ:C("alwaysShowMaruukCentaur") and quest.factionId == 2503) or
+							(BWQ:C("alwaysShowValdrakkenAccord") and quest.factionId == 2510) or
+							(BWQ:C("alwaysShowLoammNiffen") and quest.factionId == 2564) or
+							(BWQ:C("alwaysShowDreamWardens") and quest.factionId == 2574) or
+							-- Shadowlands
+							(BWQ:C("alwaysShowAscended") and quest.factionId == 2407) or
+							(BWQ:C("alwaysShowUndyingArmy") and quest.factionId == 2410) or
+							(BWQ:C("alwaysShowCourtofHarvesters") and quest.factionId == 2413) or
+							(BWQ:C("alwaysShowAvowed") and quest.factionId == 2439) or
+							(BWQ:C("alwaysShowWildHunt") and quest.factionId == 2465) or
+							(BWQ:C("alwaysShowDeathsAdvance") and quest.factionId == 2470) or
+							(BWQ:C("alwaysShowEnlightened") and quest.factionId == 2478) or
+							-- bfa
+							(BWQ:C("alwaysShow7thLegion") and quest.factionId == 2159) or
+							(BWQ:C("alwaysShowStormsWake") and quest.factionId == 2162) or
+							(BWQ:C("alwaysShowOrderOfEmbers") and quest.factionId == 2161) or
+							(BWQ:C("alwaysShowProudmooreAdmiralty") and quest.factionId == 2160) or
+							(BWQ:C("alwaysShowTheHonorbound") and quest.factionId == 2157) or
+							(BWQ:C("alwaysShowZandalariEmpire") and quest.factionId == 2103) or
+							(BWQ:C("alwaysShowTalanjisExpedition") and quest.factionId == 2156) or
+							(BWQ:C("alwaysShowVoldunai") and quest.factionId == 2158) or
+							(BWQ:C("alwaysShowTortollanSeekers") and quest.factionId == 2163) or
+							(BWQ:C("alwaysShowChampionsOfAzeroth") and quest.factionId == 2164) or
+							-- 8.2 --
+							(BWQ:C("alwaysShowTheUnshackled") and quest.factionId == 2373) or
+							(BWQ:C("alwaysShowWavebladeAnkoan") and quest.factionId == 2400) or
+							(BWQ:C("alwaysShowRustboltResistance") and quest.factionId == 2391) or
+							-- legion
+							(BWQ:C("alwaysShowCourtOfFarondis") and (mapId == 630 or mapId == 790)) or
+							(BWQ:C("alwaysShowDreamweavers") and mapId == 641) or
+							(BWQ:C("alwaysShowHighmountainTribe") and mapId == 650) or
+							(BWQ:C("alwaysShowNightfallen") and mapId == 680) or
+							(BWQ:C("alwaysShowWardens") and quest.factionId == 1894) or
+							(BWQ:C("alwaysShowValarjar") and mapId == 634) or
+							(BWQ:C("alwaysShowArmiesOfLegionfall") and mapId == 646) or
+							(BWQ:C("alwaysShowArmyOfTheLight") and quest.factionId == 2165) or
+							(BWQ:C("alwaysShowArgussianReach") and quest.factionId == 2170) then
+
+							-- pet battle override
+							if BWQ:C("hidePetBattleBountyQuests") and not BWQ:C("showPetBattle") and quest.worldQuestType == Enum.QuestTagType.PetBattle then
+								quest.hide = true
+							else
+								quest.hide = false
+							end
+						end
+						-- don't filter epic quests based on setting
+						if BWQ:C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == Enum.QuestTagType.Raid) then quest.hide = false end
+
+						BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+
+						if not quest.hide then
+							numQuests = numQuests + 1
+
+							if rewardType then
+								for _, rtype in next, rewardType do
+									if rtype == CONSTANTS.REWARD_TYPES.POLISHED_PET_CHARM then
+										BWQ.totalPolishedPetCharms = BWQ.totalPolishedPetCharms + quest.reward.polishedPetCharmsAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.ARTIFACTPOWER and quest.reward.azeriteAmount then
+										BWQ.totalArtifactPower = BWQ.totalArtifactPower + (quest.reward.azeriteAmount or 0)
+									elseif rtype == CONSTANTS.REWARD_TYPES.WAKENING_ESSENCE and quest.reward.wakeningEssencesAmount then
+										BWQ.totalWakeningEssences = BWQ.totalWakeningEssences + quest.reward.wakeningEssencesAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.WAR_RESOURCES and quest.reward.warResourceAmount then
+										BWQ.totalWarResources = BWQ.totalWarResources + quest.reward.warResourceAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.SERVICE_MEDAL and quest.reward.serviceMedalAmount then
+										BWQ.totalServiceMedals = BWQ.totalServiceMedals + quest.reward.serviceMedalAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.RESOURCES and quest.reward.resourceAmount then
+										BWQ.totalResources = BWQ.totalResources + quest.reward.resourceAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.LEGIONFALL_SUPPLIES and quest.reward.legionfallSuppliesAmount then
+										BWQ.totalLegionfallSupplies = BWQ.totalLegionfallSupplies + quest.reward.legionfallSuppliesAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.XP and quest.reward.xp then
+										BWQ.totalXP = BWQ.totalXP + quest.reward.xp
+									elseif rtype == CONSTANTS.REWARD_TYPES.HONOR and quest.reward.honor then
+										BWQ.totalHonor = BWQ.totalHonor + quest.reward.honor
+									elseif rtype == CONSTANTS.REWARD_TYPES.MONEY and quest.reward.money then
+										BWQ.totalGold = BWQ.totalGold + quest.reward.money
+									elseif rtype == CONSTANTS.REWARD_TYPES.BLOODOFSARGERAS and quest.reward.itemQuantity then
+										BWQ.totalBloodOfSargeras = BWQ.totalBloodOfSargeras + quest.reward.itemQuantity
+									elseif rtype == CONSTANTS.REWARD_TYPES.GEAR then
+										BWQ.totalGear = BWQ.totalGear + 1
+									elseif rtype == CONSTANTS.REWARD_TYPES.MARK_OF_HONOR then
+										BWQ.totalMarkOfHonor = BWQ.totalMarkOfHonor + quest.reward.itemQuantity
+									elseif rtype == CONSTANTS.REWARD_TYPES.PRISMATIC_MANAPEARL then
+										BWQ.totalPrismaticManapearl = BWQ.totalPrismaticManapearl + quest.reward.prismaticManapearlAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.CYPHERS_OF_THE_FIRST_ONES then
+										BWQ.totalCyphersOfTheFirstOnes = BWQ.totalCyphersOfTheFirstOnes + quest.reward.cyphersOfTheFirstOnesAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.GRATEFUL_OFFERING then
+										BWQ.totalGratefulOffering = BWQ.totalGratefulOffering + quest.reward.gratefulOfferingAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.BLOODY_TOKENS then
+										BWQ.totalBloodyTokens = BWQ.totalBloodyTokens + quest.reward.bloodyTokensAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.DRAGON_ISLES_SUPPLIES then
+										BWQ.totalDragonIslesSupplies = BWQ.totalDragonIslesSupplies + quest.reward.dragonIslesSuppliesAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.ELEMENTAL_OVERFLOW then
+										BWQ.totalElementalOverflow = BWQ.totalElementalOverflow + quest.reward.elementalOverflowAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.FLIGHTSTONES then
+										BWQ.totalFlightstones = BWQ.totalFlightstones + quest.reward.flightstonesAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.WHELPLINGS_DREAMING_CREST then
+										BWQ.totalWhelplingsDreamingCrest = BWQ.totalWhelplingsDreamingCrest + quest.reward.WhelplingsDreamingCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.DRAKES_DREAMING_CREST then
+										BWQ.totalDrakesDreamingCrest = BWQ.totalDrakesDreamingCrest + quest.reward.DrakesDreamingCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.WYRMS_DREAMING_CREST then
+										BWQ.totalWyrmsDreamingCrest = BWQ.totalWyrmsDreamingCrest + quest.reward.WyrmsDreamingCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.ASPECTS_DREAMING_CREST then
+										BWQ.totalAspectsDreamingCrest = BWQ.totalAspectsDreamingCrest + quest.reward.AspectsDreamingCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.WHELPLINGS_Awakened_CREST then
+										BWQ.totalWhelplingsAwakenedCrest = BWQ.totalWhelplingsAwakenedCrest + quest.reward.WhelplingsAwakenedCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.DRAKES_Awakened_CREST then
+										BWQ.totalDrakesAwakenedCrest = BWQ.totalDrakesAwakenedCrest + quest.reward.DrakesAwakenedCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.WYRMS_Awakened_CREST then
+										BWQ.totalWyrmsAwakenedCrest = BWQ.totalWyrmsAwakenedCrest + quest.reward.WyrmsAwakenedCrestAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.ASPECTS_Awakened_CREST then
+										BWQ.totalAspectsAwakenedCrest = BWQ.totalAspectsAwakenedCrest + quest.reward.AspectsAwakenedCrestAmount	
+									elseif rtype == CONSTANTS.REWARD_TYPES.MYSTERIOUS_FRAGMENT then
+										BWQ.totalMysteriousFragment = BWQ.totalMysteriousFragment + quest.reward.MysteriousFragmentAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.RESONANCE_CRYSTALS then
+										BWQ.totalResonanceCrystals = BWQ.totalResonanceCrystals + quest.reward.ResonanceCrystalsAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.THE_ASSEMBLY_OF_THE_DEEPS then
+										BWQ.totalTheAssemblyOfTheDeeps = BWQ.totalTheAssemblyOfTheDeeps + quest.reward.TheAssemblyoftheDeepsAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.HALLOWFALL_ARATHI then
+										BWQ.totalHallowfallArathi = BWQ.totalHallowfallArathi + quest.reward.HallowfallArathiAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.VALORSTONES then
+										BWQ.totalValorstones = BWQ.totalValorstones + quest.reward.ValorstonesAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.KEJ then
+										BWQ.totalKej = BWQ.totalKej + quest.reward.KejAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.COUNCIL_OF_DORNOGAL then
+										BWQ.totalCouncilofDornogal = BWQ.totalCouncilofDornogal + quest.reward.CouncilofDornogalAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.THE_WEAVER then
+										BWQ.totalTheWeaver = BWQ.totalTheWeaver + quest.reward.TheWeaverAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.THE_GENERAL then
+										BWQ.totalTheGeneral = BWQ.totalTheGeneral + quest.reward.TheGeneralAmount
+									elseif rtype == CONSTANTS.REWARD_TYPES.THE_VIZIER then
+										BWQ.totalTheVizier = BWQ.totalTheVizier + quest.reward.TheVizierAmount
+									end
 								end
 							end
-						end
-					else
-						--[[
-						if BWQcfg.spewDebugInfo then
-							print("-------")
-							print("[BWQ] Quest Hidden!")
-							print("[BWQ] -- Title: "..tostring(quest.title))
-							print("[BWQ] -- ID: "..tostring(quest.questId))
-							print("[BWQ] -- tagName: "..tostring(quest.tagName))
-							print("[BWQ] -- tagId: "..tostring(quest.tagId))
-							print("[BWQ] -- worldQuestType: "..tostring(quest.worldQuestType))
-							if (quest.factionId) then
-								print("[BWQ] -- faction: "..tostring(quest.faction).." (factionID: "..tostring(quest.factionId)..")")
+							if questType then
+								for _, qtype in next, questType do
+									if qtype == CONSTANTS.QUEST_TYPES.HERBALISM then
+										BWQ.totalHerbalism = BWQ.totalHerbalism + 1
+									elseif qtype == CONSTANTS.QUEST_TYPES.MINING then
+										BWQ.totalMining = BWQ.totalMining + 1
+									elseif qtype == CONSTANTS.QUEST_TYPES.FISHING then
+										BWQ.totalFishing = BWQ.totalFishing + 1
+									elseif qtype == CONSTANTS.QUEST_TYPES.SKINNING then
+										BWQ.totalSkinning = BWQ.totalSkinning + 1
+									end
+								end
 							end
-							print("-------")
+						else
+							--[[
+							if BWQcfg.spewDebugInfo then
+								print("-------")
+								print("[BWQ] Quest Hidden!")
+								print("[BWQ] -- Title: "..tostring(quest.title))
+								print("[BWQ] -- ID: "..tostring(quest.questId))
+								print("[BWQ] -- tagName: "..tostring(quest.tagName))
+								print("[BWQ] -- tagId: "..tostring(quest.tagId))
+								print("[BWQ] -- worldQuestType: "..tostring(quest.worldQuestType))
+								if (quest.factionId) then
+									print("[BWQ] -- faction: "..tostring(quest.faction).." (factionID: "..tostring(quest.factionId)..")")
+								end
+								print("-------")
+							end
+							]]
 						end
-						]]
 					end
 				end
 			end
