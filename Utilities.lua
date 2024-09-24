@@ -15,22 +15,26 @@ function BWQ:AbbreviateNumber(number)
 	return number
 end
 
-function BWQ:FormatTimeLeftString(timeLeft)
+function BWQ:FormatTimeLeftString(minutes)
 	local timeLeftStr = ""
-	
-	if timeLeft <= 0 then return "" end
-	-- if timeLeft >= 60 * 24 then -- at least 1 day
-	-- 	timeLeftStr = string.format("%.0fd", timeLeft / 60 / 24)
-	-- end
-	if timeLeft >= 60 then -- hours
-		timeLeftStr = string.format("%.0fh", math.floor(timeLeft / 60))
-	end
-	timeLeftStr = string.format("%s%s%sm", timeLeftStr, timeLeftStr ~= "" and " " or "", timeLeft % 60) -- always show minutes
+	if minutes <= 0 then return "" end
 
-	if 		timeLeft <= 120 then timeLeftStr = string.format("|cffD96932%s|r", timeLeftStr)
-	elseif 	timeLeft <= 240 then timeLeftStr = string.format("|cffDBA43B%s|r", timeLeftStr)
-	elseif 	timeLeft <= 480 then timeLeftStr = string.format("|cffE6D253%s|r", timeLeftStr)
-	elseif 	timeLeft <= 960 then timeLeftStr = string.format("|cffE6DA8E%s|r", timeLeftStr)
+	local days = math.floor(minutes / 1440)
+	local hours = math.floor((minutes % 1440) / 60)
+	local mins = minutes % 60
+  
+	if days > 0 then
+		timeLeftStr = string.format("%dd %dh", days, hours)
+	elseif hours > 0 then
+		timeLeftStr = string.format("%dh %dm", hours, mins)
+	else
+		timeLeftStr = string.format("%dm", mins)
+	end
+
+	if 		minutes <= 120 then timeLeftStr = string.format("|cffD96932%s|r", timeLeftStr)
+	elseif 	minutes <= 240 then timeLeftStr = string.format("|cffDBA43B%s|r", timeLeftStr)
+	elseif 	minutes <= 480 then timeLeftStr = string.format("|cffE6D253%s|r", timeLeftStr)
+	elseif 	minutes <= 960 then timeLeftStr = string.format("|cffE6DA8E%s|r", timeLeftStr)
 	end
 
 	return timeLeftStr
