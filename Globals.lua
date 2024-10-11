@@ -28,6 +28,7 @@ BWQ.skipNextUpdate = false
 BWQ.TomTomWaypoints = {}
 BWQ.locale = GetLocale()
 BWQ.tooltip = GameTooltip
+BWQ.mapID = 0
 
 -- When adding zones to MAP_ZONES, be sure to also add the zoneID to MAP_ZONES_SORT immediately below
 -- The simplest way to get the MapID for the zone you are currently in is to enter: 
@@ -88,22 +89,25 @@ BWQ.MAP_ZONES = {
 		[885] = { id = 885,   name = C_Map.GetMapInfo(885).name, quests = {}, buttons = {}, },   -- Antoran Wastes
 	},
 }
+-- The following table is used to sort the zones when displayed. This table should only include zones that are in the 
+-- BWQ.MAP_ZONES table above.
 BWQ.MAP_ZONES_SORT = {
-	[CONSTANTS.EXPANSIONS.THEWARWITHIN] = {
-		2248, 2214, 2215, 2255, 2213
-	},
-	[CONSTANTS.EXPANSIONS.DRAGONFLIGHT] = {
-		2022, 2023, 2024, 2025, 2085, 2151, 2133, 2200
-	},
-	[CONSTANTS.EXPANSIONS.SHADOWLANDS] = {
-		1525, 1533, 1536, 1565, 1543, 1970
-	},
-	[CONSTANTS.EXPANSIONS.BFA] = {
-		1530, 1527, 1355, 1462, 62, 14, 863, 864, 862, 895, 942, 896, 1161
-	},
-	[CONSTANTS.EXPANSIONS.LEGION] = {
-		630, 790, 641, 650, 634, 680, 627, 646, 830, 882, 885
-	},
+	[CONSTANTS.EXPANSIONS.THEWARWITHIN] = 	{	2248, 2214, 2215, 2255, 2213										},
+	[CONSTANTS.EXPANSIONS.DRAGONFLIGHT] = 	{	2022, 2023, 2024, 2025, 2085, 2151, 2133, 2200						},
+	[CONSTANTS.EXPANSIONS.SHADOWLANDS] =  	{	1525, 1533, 1536, 1565, 1543, 1970									},
+	[CONSTANTS.EXPANSIONS.BFA] = 			{	1530, 1527, 1355, 1462, 62, 14, 863, 864, 862, 895, 942, 896, 1161	},
+	[CONSTANTS.EXPANSIONS.LEGION] = 		{	630, 790, 641, 650, 634, 680, 627, 646, 830, 882, 885				}
+}
+-- There are zones associated with each expansion that do not contain world quests. The addon uses the mapIDs for these 
+-- additional zones in order to better facilitate the "auto switch expansions" feature.  For example, even though there 
+-- are no world quests in Dornogal, we want for the addon to recognize that it is a TWW zone so that it switches to the 
+-- THEWARWITHIN expansion properly.
+BWQ.MAP_ZONES_EXTRA = {
+	[CONSTANTS.EXPANSIONS.THEWARWITHIN] = 	{	2339, 2328, 2216, 2255												},
+	[CONSTANTS.EXPANSIONS.DRAGONFLIGHT] = 	{	2112, 2239															},
+	[CONSTANTS.EXPANSIONS.SHADOWLANDS] = 	{	1699, 1550, 1670, 1671, 1961, 1701, 1698, 1707, 1911, 1912			},
+	[CONSTANTS.EXPANSIONS.BFA] = 			{	1165, 1163															},
+	[CONSTANTS.EXPANSIONS.LEGION] = 		{	831, 628, 649, 652, 750, 747, 715, 619								}
 }
 
 -- data broker object

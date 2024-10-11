@@ -1,3 +1,15 @@
+### 11.0.2.20
+* The addon will now automatically change expansions if you zone into a zone
+  associated with that expansion (including when you first enter the game).  This
+  should make things easier for those playing alts or who are still completing 
+  world quests in past expansions for achievements, etc.  If you dislike this feature,
+  you can disable it in the settings -- look for "Auto switch expansions based on 
+  current zone".
+* The "Time Remaining" column will now give the remaining time in days/hours for 
+  any quest with more than one day remaining, hours/minutes for any quest with more
+  than one hour remaining, and just minutes for any quest with less than one hour
+  remaining.  (The coloring logic has not changed.)
+  
 ### 11.0.2.19
 * Tom Tom is now an optional dependency (i.e., the Tom Tom addon is 
   no longer required.)

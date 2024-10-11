@@ -20,6 +20,7 @@ function BWQ:SetupConfigMenu()
 	local options = {
 		{ text = "Attach list frame to world map", check = "attachToWorldMap" },
 		{ text = "Show list frame on click instead of mouse-over", check = "showOnClick" },
+		{ text = "Auto switch expansions based on current zone", check = "autoChooseExpansionOnZone" },
 		{ text = "Use per-character settings", check = "usePerCharacterSettings" },
 		{ text = "" },
 		{ text = "Always show |cffa335eeepic|r world quests (e.g. world bosses)", check = "alwaysShowEpicQuests" },
@@ -274,6 +275,18 @@ function BWQ:SetupConfigMenu()
 			CloseDropDownMenus()
 			ToggleDropDownMenu(1, nil, BWQ.configMenu, BWQ.configMenu.anchor, 0, 0)
 		end
+
+		if var == "autoChooseExpansionOnZone" then
+			if BWQ:C("autoChooseExpansionOnZone") then 
+				--print(string.format("[BWQ] Registering Zone Change Events"))
+				BWQ:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+				BWQ:RegisterEvent("NEW_WMO_CHUNK")
+			else
+				--print(string.format("[BWQ] UnRegistering Zone Change Events"))
+				BWQ:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
+				BWQ:UnregisterEvent("NEW_WMO_CHUNK")
+			end
+		end
 	end
 
 	BWQ.configMenu.initialize = function(self, level)
@@ -322,6 +335,7 @@ BWQ.defaultConfig = {
 	-- general
 	attachToWorldMap = false,
 	showOnClick = false,
+	autoChooseExpansionOnZone = true,
 	usePerCharacterSettings = false,
 	enableClickToOpenMap = false,
 	enableTomTomWaypointsOnClick = true,

@@ -1020,61 +1020,64 @@ function BWQ:RenderRows()
 	local rowIndex = 0
 	local rowInViewIndex = 0
 	for _, mapId in next, BWQ.MAP_ZONES_SORT[BWQ.expansion] do
-		
 		local collapsed = BWQ:C("collapsedZones")[mapId]
-
-		if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests == 0 or rowIndex < sliderval or rowIndex > sliderval + maxEntries then
-
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Hide()
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Hide()
-		else
-
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Show()
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetPoint("TOP", BWQ, "TOP", 15 + (BWQ.totalWidth / -2) + (BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:GetStringWidth() / 2), BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 2)
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Show()
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetPoint("TOP", BWQ, "TOP", 5, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 3)
-
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:Show()
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:SetAllPoints(BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs)
-			local color = not collapsed and {0.9, 0.8, 0} or {0.3, 0.3, 0.3}
-			BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetTextColor(unpack(color))
-			
-			rowInViewIndex = rowInViewIndex + 1
-		end
-
-		if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
-			rowIndex = rowIndex + 1 -- count up from row with zone name
-		end
-
-		BWQ.highlightedRow = true
-		local buttonIndex = 1
-		for _, button in ipairs(BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons) do
-			if not button.quest.hide and not collapsed and buttonIndex <= BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests then
-				if rowIndex < sliderval  or rowIndex > sliderval + maxEntries then
-					button:Hide()
-				else
-					button:Show()
-					button:SetPoint("TOP", BWQ, "TOP", 0, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex)
-					rowInViewIndex = rowInViewIndex + 1
-
-					if BWQ.highlightedRow then
-						button.rowHighlight:Show()
-					else
-						button.rowHighlight:Hide()
-					end
-				end
-				BWQ.highlightedRow = not BWQ.highlightedRow
-				buttonIndex = buttonIndex + 1
-				rowIndex = rowIndex + 1
+		if BWQ.MAP_ZONES[BWQ.expansion][mapId] then
+			if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests == 0 or rowIndex < sliderval or rowIndex > sliderval + maxEntries then
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Hide()
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Hide()
 			else
-				button:Hide()
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:Show()
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetPoint("TOP", BWQ, "TOP", 15 + (BWQ.totalWidth / -2) + (BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:GetStringWidth() / 2), BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 2)
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:Show()
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.texture:SetPoint("TOP", BWQ, "TOP", 5, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex - 3)
+
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:Show()
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.collapse:SetAllPoints(BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs)
+				local color = not collapsed and {0.9, 0.8, 0} or {0.3, 0.3, 0.3}
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].zoneSep.fs:SetTextColor(unpack(color))
+				
+				rowInViewIndex = rowInViewIndex + 1
+			end
+
+			if BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests ~= 0 then
+				rowIndex = rowIndex + 1 -- count up from row with zone name
+			end
+
+			BWQ.highlightedRow = true
+			local buttonIndex = 1
+			for _, button in ipairs(BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons) do
+				if not button.quest.hide and not collapsed and buttonIndex <= BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests then
+					if rowIndex < sliderval  or rowIndex > sliderval + maxEntries then
+						button:Hide()
+					else
+						button:Show()
+						button:SetPoint("TOP", BWQ, "TOP", 0, BWQ.offsetTop + ROW_HEIGHT * rowInViewIndex)
+						rowInViewIndex = rowInViewIndex + 1
+
+						if BWQ.highlightedRow then
+							button.rowHighlight:Show()
+						else
+							button.rowHighlight:Hide()
+						end
+					end
+					BWQ.highlightedRow = not BWQ.highlightedRow
+					buttonIndex = buttonIndex + 1
+					rowIndex = rowIndex + 1
+				else
+					button:Hide()
+				end
 			end
 		end
 	end
 end
 
 function BWQ:SwitchExpansion(expac)
-	BWQ.expansion = expac
+	if BWQ.expansion == expac then
+		return
+	else
+		BWQ.expansion = expac
+	end
+
 	if not BWQ:C("usePerCharacterSettings") then
 		BWQcfg["expansion"] = expac
 	else
@@ -1372,21 +1375,23 @@ function BWQ:UpdateBlock()
 
 				-- Set row icon based on quest.tagID
 				if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
-					button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon, true)
-					button.icon:SetAlpha(1)
-					button.icon:SetSize(12, 12)
-					--[[ Disabling for now -- needs additional work/testing  (TODO)
-					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border then
-						print(string.format("[BWQ] Creating border icon for '%s'", button.quest.title))
-						button.iconBorder = button:CreateTexture(nil, "BORDER")
-						button.iconBorder:SetSize(12, 12)
-						button.iconBorder:SetScale(0.70)
-						button.iconBorder:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border, true)
-						button.iconBorder:SetAlpha(1)
+					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] ~= "N/A" then
+						button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon, true)
+						button.icon:SetAlpha(1)
+						button.icon:SetSize(12, 12)
+						--[[ Disabling for now -- needs additional work/testing  (TODO)
+						if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border then
+							print(string.format("[BWQ] Creating border icon for '%s'", button.quest.title))
+							button.iconBorder = button:CreateTexture(nil, "BORDER")
+							button.iconBorder:SetSize(12, 12)
+							button.iconBorder:SetScale(0.70)
+							button.iconBorder:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border, true)
+							button.iconBorder:SetAlpha(1)
+						end
+						]]
 					end
-					]]
 				else
-					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 and button.quest.tagId ~= 109 then	-- 109 is just your standard world quest
+					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 then
 						print(string.format("[BWQ] Unhandled Quest TagId: %d (%s)", button.quest.tagId, button.quest.title))
 					end
 					button.icon:SetAlpha(0)
@@ -1672,6 +1677,10 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			BWQ:RegisterEvent("PLAYER_LOGOUT")
 			BWQ:RegisterEvent("QUEST_ACCEPTED")
 		end
+		if BWQ:C("autoChooseExpansionOnZone") then 
+			BWQ:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+			BWQ:RegisterEvent("NEW_WMO_CHUNK")
+		end
 	elseif event == "ADDON_LOADED" then
 		if arg1 == "Broker_WorldQuests" then
 			BWQcfg = BWQcfg or BWQ.defaultConfig
@@ -1715,6 +1724,36 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			for k, v in pairs(BWQ.TomTomWaypoints) do
 				TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[k])
 				BWQ.TomTomWaypoints[k] = nil
+			end
+		end
+	elseif event == "ZONE_CHANGED_NEW_AREA" or "NEW_WMO_CHUNK" then
+		local mapID = C_Map.GetBestMapForUnit("player")
+		if mapID then
+			if mapID == BWQ.mapID then
+				return
+			else
+				BWQ.mapID = mapID
+			end
+			local found, expansionName = BWQ:SearchMapZones(BWQ.MAP_ZONES_SORT, mapID)
+			if not found then
+				found, expansionName = BWQ:SearchMapZones(BWQ.MAP_ZONES_EXTRA, mapID)
+			end
+			local mapInfo = C_Map.GetMapInfo(mapID)
+
+			if found then
+				if BWQcfg.spewDebugInfo and mapInfo then
+					--print(string.format("[BWQ] Entered new zone: %s (ID: %d) [%s vs. %s]", mapInfo.name, mapID, expansionName, BWQ.expansion))
+				end
+				if expansionName ~= BWQ.expansion then
+					if BWQcfg.spewDebugInfo then
+						--print(string.format("[BWQ] Calling BWQ:SwitchExpansion(%s)", expansionName))
+					end
+					BWQ:SwitchExpansion(expansionName)
+				end	
+			else
+				if BWQcfg.spewDebugInfo and mapInfo then
+					--print(string.format("[BWQ] Entered new zone: %s (ID: %d) [N/A]", mapInfo.name, mapID))
+				end
 			end
 		end
 	end

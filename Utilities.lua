@@ -39,3 +39,44 @@ function BWQ:FormatTimeLeftString(minutes)
 
 	return timeLeftStr
 end
+
+-- Search for a mapID across all zones supported by the addon
+function BWQ:SearchMapZones(table, mapID)
+	if not table then
+		if BWQcfg.spewDebugInfo then
+			print("[BWQ] Bad table provided to BWQ:SearchMapZones()")
+		end
+		return false, nil
+	end
+    for expansion, zones in pairs(table) do
+        for _, _mapID in ipairs(zones) do
+            if _mapID == mapID then
+                return true, expansion
+            end
+        end
+    end
+    return false, nil
+end
+
+-- Search for a mapID within a specific expansion supported by the addon
+function BWQ:SearchSpecificExpansion(table, expansion, mapID)
+	if not table then
+		if BWQcfg.spewDebugInfo then
+			print("[BWQ] Bad table provided to BWQ:SearchSpecificExpansion()")
+		end
+		return false
+	end
+    if not table[expansion] then
+		if BWQcfg.spewDebugInfo then
+			print("[BWQ] Bad expansion string provided to BWQ:SearchSpecificExpansion()")
+		end
+        return false
+    end
+
+    for _, _mapID in ipairs(table[expansion]) do
+        if _mapID == mapID then
+            return true
+        end
+    end
+    return false
+end
