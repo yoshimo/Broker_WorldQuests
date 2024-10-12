@@ -1374,8 +1374,14 @@ function BWQ:UpdateBlock()
 				end
 
 				-- Set row icon based on quest.tagID
+				--[[ Disabling for now -- needs additional work/testing  (TODO)
+				if button.iconBorder then
+					button.iconBorder:SetAlpha(0)
+				end
+				]]
+				button.icon:SetAlpha(0)
 				if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
-					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] ~= "N/A" then
+					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon ~= "N/A" then
 						button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon, true)
 						button.icon:SetAlpha(1)
 						button.icon:SetSize(12, 12)
@@ -1394,12 +1400,6 @@ function BWQ:UpdateBlock()
 					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 then
 						print(string.format("[BWQ] Unhandled Quest TagId: %d (%s)", button.quest.tagId, button.quest.title))
 					end
-					button.icon:SetAlpha(0)
-					--[[ Disabling for now -- needs additional work/testing  (TODO)
-					if button.iconBorder then
-						button.iconBorder:SetAlpha(0)
-					end
-					]]
 				end
 
 				-- Set the first cell of the row (the quest title/name)

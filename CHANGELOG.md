@@ -1,3 +1,6 @@
+### 11.0.2.21
+* Fixed bug with the quest icons
+
 ### 11.0.2.20
 * The addon will now automatically change expansions if you zone into a zone
   associated with that expansion (including when you first enter the game).  This
