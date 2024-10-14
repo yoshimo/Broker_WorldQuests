@@ -88,7 +88,7 @@ CONSTANTS.QUEST_TYPES = {
 -- Search for "World" (World Quest) for most of these.
 -- (Note:  "N/A" means that it does not use a special icon.)
 CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
-	[-1]  = { icon = "worldquest-icon-clock" },
+	[-1]  = { icon = "worldquest-Capstone-questmarker-epic-Locked" },
 	[109] = { icon = "N/A" },
 	[111] = { icon = "worldquest-questmarker-dragon" },
 	[112] = { icon = "worldquest-questmarker-dragon" },
@@ -121,7 +121,7 @@ CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
 	[278] = { icon = "worldquest-icon-pvp-ffa", border = "worldquest-questmarker-dragon" },
 	[281] = { icon = "worldquest-icon-race" },
 	[286] = { icon = "worldquest-Capstone-questmarker-epic-Toast", border = "worldquest-questmarker-dragon" },
-	[289] = { icon = "worldquest-icon-boss" },
+	[289] = { icon = "worldquest-icon-boss", border = "worldquest-questmarker-dragon-silver"  },
 }
 
 CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE = {

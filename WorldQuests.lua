@@ -1201,6 +1201,8 @@ function BWQ:UpdateBlock()
 
 					button.icon = button:CreateTexture()
 					button.icon:SetSize(12, 12)
+					button.iconBorder = button:CreateTexture(nil, "BORDER")
+					button.iconBorder:SetSize(12, 12)
 
 					-- create font strings
 					button.title = CreateFrame("Button", nil, button)
@@ -1373,28 +1375,23 @@ function BWQ:UpdateBlock()
 					end
 				end
 
+				--====
 				-- Set row icon based on quest.tagID
-				--[[ Disabling for now -- needs additional work/testing  (TODO)
-				if button.iconBorder then
-					button.iconBorder:SetAlpha(0)
-				end
-				]]
+				--====
 				button.icon:SetAlpha(0)
+				button.iconBorder:SetAlpha(0)
 				if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId] then
 					if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon ~= "N/A" then
+						--print(string.format("[BWQ] Creating icon for '%s' (tagId: %d)", button.quest.title, button.quest.tagId))
 						button.icon:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].icon, true)
 						button.icon:SetAlpha(1)
 						button.icon:SetSize(12, 12)
-						--[[ Disabling for now -- needs additional work/testing  (TODO)
 						if CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border then
-							print(string.format("[BWQ] Creating border icon for '%s'", button.quest.title))
-							button.iconBorder = button:CreateTexture(nil, "BORDER")
-							button.iconBorder:SetSize(12, 12)
-							button.iconBorder:SetScale(0.70)
+							--print(string.format("[BWQ] Creating border icon for '%s' (tagId: %d)", button.quest.title, button.quest.tagId))
+							button.iconBorder:SetScale(0.5)
 							button.iconBorder:SetAtlas(CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID[button.quest.tagId].border, true)
 							button.iconBorder:SetAlpha(1)
 						end
-						]]
 					end
 				else
 					if BWQcfg.spewDebugInfo and button.quest.tagId and button.quest.tagId > 0 then
@@ -1445,11 +1442,9 @@ function BWQ:UpdateBlock()
 				button.title:SetHeight(button.titleFS:GetStringHeight())
 
 				button.icon:SetPoint("LEFT", button, "LEFT", 5, 0)
-				--[[ Disabling for now -- needs additional work/testing  (TODO)
-				if button.iconBorder then
+				if button.iconBorder:GetAlpha() > 0 then
 					button.iconBorder:SetPoint("CENTER", button.icon, "CENTER", 0, 0)
 				end
-				]]
 				button.titleFS:SetPoint("LEFT", button.icon, "RIGHT", 5, 0)
 				button.title:SetPoint("LEFT", button.titleFS, "LEFT", 0, 0)
 				button.rewardFS:SetPoint("LEFT", button.titleFS, "RIGHT", 10, 0)
