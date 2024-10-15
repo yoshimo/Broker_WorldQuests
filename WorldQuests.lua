@@ -1400,8 +1400,12 @@ function BWQ:UpdateBlock()
 				end
 
 				-- Set the first cell of the row (the quest title/name)
+				local isNewText = ""
+				if BWQ:C("showNEWTextWhenAppropriate") then
+					isNewText = button.quest.isNew and "|cffe5cc80NEW|r  " or ""
+				end
 				button.titleFS:SetText(string.format("%s%s%s|r",
-					button.quest.isNew and "|cffe5cc80NEW|r  " or "",
+					isNewText,
 					button.quest.isMissingAchievementCriteria and "|cff1EFF00" or WORLD_QUEST_QUALITY_COLORS[button.quest.quality].hex,
 					button.quest.title
 				))

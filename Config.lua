@@ -72,6 +72,7 @@ function BWQ:SetupConfigMenu()
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
+		{ text = "Show 'NEW' text for recently found world quests", check = "showNEWTextWhenAppropriate" },
 		{ text = "" },
 		{ text = "Filter by reward...", isTitle = true },
 		{ text = ("|T%1$s:16:16|t  Items"):format("Interface\\Minimap\\Tracking\\Banker"), check = "showItems", submenu = {
@@ -387,6 +388,7 @@ BWQ.defaultConfig = {
 		brokerShowBloodyTokens = true,
 		brokerShowPolishedPetCharms = false,
 	sortByTimeRemaining = false,
+	showNEWTextWhenAppropriate = true,
 	-- reward type
 	showDragonIslesSupplies = true,
 	showElementalOverflow = true,
