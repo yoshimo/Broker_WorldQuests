@@ -1,3 +1,14 @@
+### 11.0.5.0
+* Added functionality to allow for multiple icons. In other words, for the "boss"
+  type world quests, it can show the skull icon surrounded by the silver dragon.
+  (This update is purely cosmetic.)
+* There is now a configuration setting labeled "Show 'NEW' text for recently found
+  world quests".  It defaults to ON (checked), since that's how the addon has always
+  worked.  But, if you prefer not to see the "NEW" text at the beginning of lines,
+  you can toggle this setting.  This is likely more useful for those who are switching
+  between expansions regularly and don't want to see everything listed as "NEW" every
+  time the switch is made.
+
 ### 11.0.2.21
 * Fixed bug with the quest icons
 
@@ -31,7 +42,7 @@
 
 ### 11.0.2.15
 * When enabled in settings, the Tom Tom waypoints support feature will now "add"
-  waypoints rather than just maintaining adding/removing a single waypoint.
+  waypoints rather than just adding/removing a single waypoint.
 * TWW Epic Boss type world quests now have the appropriate icon at the front
   of the row, similar to pet battles, etc.
 * Fixed a bug that was introduced in version 11.0.2.13.
