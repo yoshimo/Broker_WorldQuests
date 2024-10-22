@@ -1737,22 +1737,22 @@ BWQ:SetScript("OnEvent", function(self, event, arg1)
 			if not found then
 				found, expansionName = BWQ:SearchMapZones(BWQ.MAP_ZONES_EXTRA, mapID)
 			end
-			local mapInfo = C_Map.GetMapInfo(mapID)
-
+			
 			if found then
-				if BWQcfg.spewDebugInfo and mapInfo then
+				--local mapInfo = C_Map.GetMapInfo(mapID)
+				--if BWQcfg.spewDebugInfo and mapInfo then
 					--print(string.format("[BWQ] Entered new zone: %s (ID: %d) [%s vs. %s]", mapInfo.name, mapID, expansionName, BWQ.expansion))
-				end
+				--end
 				if expansionName ~= BWQ.expansion then
-					if BWQcfg.spewDebugInfo then
+					--if BWQcfg.spewDebugInfo then
 						--print(string.format("[BWQ] Calling BWQ:SwitchExpansion(%s)", expansionName))
-					end
+					--end
 					BWQ:SwitchExpansion(expansionName)
 				end	
-			else
-				if BWQcfg.spewDebugInfo and mapInfo then
+			--else
+				--if BWQcfg.spewDebugInfo and mapInfo then
 					--print(string.format("[BWQ] Entered new zone: %s (ID: %d) [N/A]", mapInfo.name, mapID))
-				end
+				--end
 			end
 		end
 	end

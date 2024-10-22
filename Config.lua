@@ -172,6 +172,7 @@ function BWQ:SetupConfigMenu()
 		{ text = "" },
 		{ text = "Hide faction column", check="hideFactionColumn" },
 		{ text = "Hide faction paragon bars", check="hideFactionParagonBars" },
+		{ text = "" },
 		{ text = "Always show quests for faction...", isTitle = true },
 		{ text = "       Dragonflight", submenu = {
 				{ text = "Dragonscale Expedition", check="alwaysShowDragonscaleExpedition" },
