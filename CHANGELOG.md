@@ -1,3 +1,6 @@
+### 11.0.5.1
+* Fixed error caused by recent World of Warcraft patch.
+
 ### 11.0.5.0
 * Added functionality to allow for multiple icons. In other words, for the "boss"
   type world quests, it can show the skull icon surrounded by the silver dragon.
