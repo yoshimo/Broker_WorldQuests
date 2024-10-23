@@ -109,8 +109,8 @@ function BWQ:UpdateBountyData()
 	end
 end
 
-function BWQ:ShowBountyTooltip(button, questId)
-	local questIndex = C_QuestLog.GetLogIndexForQuestID(questId)
+function BWQ:ShowBountyTooltip(button, questID)
+	local questIndex = C_QuestLog.GetLogIndexForQuestID(questID)
 	local title = C_QuestLog.GetTitleForLogIndex(questIndex)
 	if title then
 		GameTooltip:SetOwner(button, "ANCHOR_BOTTOM")
@@ -118,15 +118,15 @@ function BWQ:ShowBountyTooltip(button, questId)
 		local _, questDescription = GetQuestLogQuestText(questIndex)
 		GameTooltip:AddLine(questDescription, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true)
 	
-		local objectiveText, objectiveType, finished = GetQuestObjectiveInfo(questId, 1, false)
+		local objectiveText, objectiveType, finished = GetQuestObjectiveInfo(questID, 1, false)
 		if objectiveText and #objectiveText > 0 then
 			local color = finished and GRAY_FONT_COLOR or HIGHLIGHT_FONT_COLOR;
 			GameTooltip:AddLine(QUEST_DASH .. objectiveText, color.r, color.g, color.b, true);
 		end
 
-		GameTooltip_AddQuestRewardsToTooltip(GameTooltip, questId, TOOLTIP_QUEST_REWARDS_STYLE_EMISSARY_REWARD)
+		GameTooltip_AddQuestRewardsToTooltip(GameTooltip, questID, TOOLTIP_QUEST_REWARDS_STYLE_EMISSARY_REWARD)
 		GameTooltip:Show()
 		GameTooltip.recalculatePadding = true
-		button.UpdateTooltip = function(self) BWQ:ShowBountyTooltip(button, questId) end
+		button.UpdateTooltip = function(self) BWQ:ShowBountyTooltip(button, questID) end
 	end
 end

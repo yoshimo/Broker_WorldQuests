@@ -127,9 +127,9 @@ function BWQ:GetArtifactPowerValue(itemId)
 	return "0"
 end
 
-function BWQ:GetItemLevelValueForQuestId(questId)
+function BWQ:GetItemLevelValueForQuestId(questID)
 	BWQ.ScanTooltip:SetOwner(BWQ, "ANCHOR_NONE")
-	BWQ.ScanTooltip:SetQuestLogItem("reward", 1, questId)
+	BWQ.ScanTooltip:SetQuestLogItem("reward", 1, questID)
 	local numLines = BWQ.ScanTooltip:NumLines()
 	for i = 2, numLines do
 		local text = _G["BWQScanTooltipTextLeft" .. i]:GetText()
@@ -141,13 +141,13 @@ function BWQ:GetItemLevelValueForQuestId(questId)
 	return ""
 end
 
-function BWQ:ValueWithWarModeBonus(questId, value)
+function BWQ:ValueWithWarModeBonus(questID, value)
 	local multiplier = BWQ.warmodeEnabled and 1.1 or 1
 	return floor(value * multiplier + 0.5)
 end
 
-function BWQ:IsQuestAchievementCriteriaMissing(achievementId, questId)
-	local criteriaId = CONSTANTS.ACHIEVEMENT_CRITERIAS[questId]
+function BWQ:IsQuestAchievementCriteriaMissing(achievementId, questID)
+	local criteriaId = CONSTANTS.ACHIEVEMENT_CRITERIAS[questID]
 	if criteriaId then
 		local _, _, completed = GetAchievementCriteriaInfo(achievementId, criteriaId)
 		return not completed
@@ -162,14 +162,14 @@ local ShowQuestObjectiveTooltip = function(row)
 	BWQ.tooltip:AddLine(row.quest.title, color.r, color.g, color.b, true)
 
 	for objectiveIndex = 1, row.quest.numObjectives do
-		local objectiveText, objectiveType, finished = GetQuestObjectiveInfo(row.quest.questId, objectiveIndex, false);
+		local objectiveText, objectiveType, finished = GetQuestObjectiveInfo(row.quest.questID, objectiveIndex, false);
 		if objectiveText and #objectiveText > 0 then
 			color = finished and GRAY_FONT_COLOR or HIGHLIGHT_FONT_COLOR;
 			BWQ.tooltip:AddLine(QUEST_DASH .. objectiveText, color.r, color.g, color.b, true);
 		end
 	end
 
-	local percent = C_TaskQuest.GetQuestProgressBarInfo(row.quest.questId)
+	local percent = C_TaskQuest.GetQuestProgressBarInfo(row.quest.questID)
 	if percent then
 		GameTooltip_ShowProgressBar(BWQ.tooltip, 0, 100, percent, PERCENTAGE_STRING:format(percent))
 	end
@@ -178,10 +178,10 @@ local ShowQuestObjectiveTooltip = function(row)
 end
 
 local ShowQuestLogItemTooltip = function(button)
-	local name, texture = GetQuestLogRewardInfo(1, button.quest.questId)
+	local name, texture = GetQuestLogRewardInfo(1, button.quest.questID)
 	if name and texture then
 		BWQ.tooltip:SetOwner(button.reward, "ANCHOR_CURSOR")
-		BWQ.ScanTooltip:SetQuestLogItem("reward", 1, button.quest.questId)
+		BWQ.ScanTooltip:SetQuestLogItem("reward", 1, button.quest.questID)
 		local _, itemLink = BWQ.ScanTooltip:GetItem()
 		BWQ.tooltip:SetHyperlink(itemLink)
 		BWQ.tooltip:Show()
@@ -202,7 +202,7 @@ function BWQ:QueryZoneQuestCoordinates(mapId)
 	local quests = C_TaskQuest.GetQuestsForPlayerByMapID(mapId)
 	if quests then
 		for _, v in next, quests do
-			local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[v.questId] 
+			local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[v.questID] 
 			if quest then
 				quest.x = v.x
 				quest.y = v.y
@@ -217,10 +217,10 @@ end
 
 local Row_OnClick = function(row)
 	if IsShiftKeyDown() then
-		if (C_QuestLog.GetQuestWatchType(row.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == row.quest.questId) then
-			C_QuestLog.RemoveWorldQuestWatch(row.quest.questId)
+		if (C_QuestLog.GetQuestWatchType(row.quest.questID) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == row.quest.questID) then
+			C_QuestLog.RemoveWorldQuestWatch(row.quest.questID)
 		else
-			C_QuestLog.AddWorldQuestWatch(row.quest.questId, Enum.QuestWatchType.Manual)
+			C_QuestLog.AddWorldQuestWatch(row.quest.questID, Enum.QuestWatchType.Manual)
 		end
 	else
 		if not WorldMapFrame:IsShown() then ShowUIPanel(WorldMapFrame) end
@@ -242,10 +242,10 @@ local Row_OnClick = function(row)
 			if C_AddOns.IsAddOnLoaded("TomTom") then 
 				if not row.quest.x or not row.quest.y then BWQ:QueryZoneQuestCoordinates(row.mapId) end
 				if row.quest.x and row.quest.y then
-					if BWQ.TomTomWaypoints[row.quest.questId] then 
-						TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[row.quest.questId]) 
+					if BWQ.TomTomWaypoints[row.quest.questID] then 
+						TomTom:RemoveWaypoint(BWQ.TomTomWaypoints[row.quest.questID]) 
 					else
-						BWQ.TomTomWaypoints[row.quest.questId] = TomTom:AddWaypoint(row.mapId, row.quest.x, row.quest.y, { title = row.quest.title, silent = true, from = "Broker_WorldQuests" })
+						BWQ.TomTomWaypoints[row.quest.questID] = TomTom:AddWaypoint(row.mapId, row.quest.x, row.quest.y, { title = row.quest.title, silent = true, from = "Broker_WorldQuests" })
 					end
 				end
 			end
@@ -267,26 +267,26 @@ local RetrieveWorldQuests = function(mapId)
 		local timeLeft, questTagInfo, title, factionId
 		for i, q in ipairs(questList) do
 			if DebugRetrieveWQ then
-				print(string.format("[BWQ] questList.%d: ID: %s (mapId: %d)", i, tostring(q.questId), mapId))
+				print(string.format("[BWQ] questList.%d: ID: %s (mapId: %d)", i, tostring(q.questID), mapId))
 			end
-			if HaveQuestData(q.questId) and q.mapID == mapId then 
-				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questId) or 0
-				questTagInfo = C_QuestLog.GetQuestTagInfo(q.questId)
+			if HaveQuestData(q.questID) and q.mapID == mapId then 
+				timeLeft = C_TaskQuest.GetQuestTimeLeftMinutes(q.questID) or 0
+				questTagInfo = C_QuestLog.GetQuestTagInfo(q.questID)
 
 				if DebugRetrieveWQ then
-					local _title, _factionId = C_TaskQuest.GetQuestInfoByQuestID(q.questId)
+					local _title, _factionId = C_TaskQuest.GetQuestInfoByQuestID(q.questID)
 					print(string.format("[BWQ] questList.%d: %s", i, _title))
 					if _factionId then print(string.format("[BWQ] questList.%d: faction: %d (%s)", i, _factionId, C_Reputation.GetFactionDataByID(_factionId).name)) end
 					if questTagInfo then print(string.format("[BWQ] questList.%d: WorldQuestType: %d", i, questTagInfo.worldQuestType)) end
 				end
 
 				if questTagInfo and questTagInfo.worldQuestType then
-					local questId = q.questId
-					table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
-					local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
+					local questID = q.questID
+					table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questID)
+					local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questID] or {}
 
 					if not quest.timeAdded then
-						quest.wasSaved = BWQ.questIds[questId] ~= nil
+						quest.wasSaved = BWQ.questIds[questID] ~= nil
 					end
 					quest.timeAdded = quest.timeAdded or currentTime
 					if quest.wasSaved or currentTime - quest.timeAdded > 900 then
@@ -299,7 +299,7 @@ local RetrieveWorldQuests = function(mapId)
 					quest.sort = 0
 
 					-- C_TaskQuest.GetQuestsForPlayerByMapID fields
-					quest.questId = questId
+					quest.questID = questID
 					quest.numObjectives = q.numObjectives
 					quest.xFlight = q.x
 					quest.yFlight = q.y
@@ -310,7 +310,7 @@ local RetrieveWorldQuests = function(mapId)
 					quest.quality = questTagInfo.quality
 					quest.isElite = questTagInfo.isElite
 
-					title, factionId = C_TaskQuest.GetQuestInfoByQuestID(quest.questId)
+					title, factionId = C_TaskQuest.GetQuestInfoByQuestID(quest.questID)
 					quest.title = title
 					quest.factionId = factionId
 					if factionId then
@@ -324,8 +324,8 @@ local RetrieveWorldQuests = function(mapId)
 					local hasReward = false
 					
 					-- item reward
-					if GetNumQuestLogRewards(quest.questId) > 0 then
-						local itemName, itemTexture, quantity, quality, isUsable, itemId = GetQuestLogRewardInfo(1, quest.questId)
+					if GetNumQuestLogRewards(quest.questID) > 0 then
+						local itemName, itemTexture, quantity, quality, isUsable, itemId = GetQuestLogRewardInfo(1, quest.questID)
 						if itemName then
 							hasReward = true
 							quest.reward.itemTexture = itemTexture
@@ -333,7 +333,7 @@ local RetrieveWorldQuests = function(mapId)
 							quest.reward.itemQuality = quality
 							quest.reward.itemQuantity = quantity
 							quest.reward.itemName = itemName
-							--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s", quest.questId, quest.title, itemName, itemId, quantity))    -- for debugging
+							--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s", quest.questID, quest.title, itemName, itemId, quantity))    -- for debugging
 							
 							local _, _, _, _, _, _, _, _, equipSlot, _, _, classId, subClassId = GetItemInfo(quest.reward.itemId)
 							if classId == 7 then
@@ -344,7 +344,7 @@ local RetrieveWorldQuests = function(mapId)
 								if BWQ:C("showItems") and BWQ:C("showCraftingMaterials") then quest.hide = false end
 							elseif equipSlot ~= "" or itemId == 163857 --[[ Azerite Armor Cache ]] then
 								quest.sort = quest.sort > CONSTANTS.SORT_ORDER.EQUIP and quest.sort or CONSTANTS.SORT_ORDER.EQUIP
-								quest.reward.realItemLevel = BWQ:GetItemLevelValueForQuestId(quest.questId)
+								quest.reward.realItemLevel = BWQ:GetItemLevelValueForQuestId(quest.questID)
 								rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.GEAR
 								if BWQ:C("showItems") and BWQ:C("showGear") then quest.hide = false end
 							elseif C_Soulbinds.IsItemConduitByItemInfo(itemId) == true then
@@ -366,10 +366,10 @@ local RetrieveWorldQuests = function(mapId)
 						end
 					end
 					-- gold reward
-					local money = GetQuestLogRewardMoney(quest.questId);
+					local money = GetQuestLogRewardMoney(quest.questID);
 					if money > 20000 then -- >2g, hides these silly low gold extra rewards
 						hasReward = true
-						quest.reward.money = floor(BWQ:ValueWithWarModeBonus(quest.questId, money) / 10000) * 10000
+						quest.reward.money = floor(BWQ:ValueWithWarModeBonus(quest.questID, money) / 10000) * 10000
 						quest.sort = quest.sort > CONSTANTS.SORT_ORDER.MONEY and quest.sort or CONSTANTS.SORT_ORDER.MONEY
 						rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.MONEY
 
@@ -380,7 +380,7 @@ local RetrieveWorldQuests = function(mapId)
 						end
 					end
 					-- honor reward
-					local honor = GetQuestLogRewardHonor(quest.questId)
+					local honor = GetQuestLogRewardHonor(quest.questID)
 					if honor > 0 then
 						hasReward = true
 						quest.reward.honor = honor
@@ -390,7 +390,7 @@ local RetrieveWorldQuests = function(mapId)
 						if BWQ:C("showHonor") then quest.hide = false end
 					end
 					-- currency reward
-					local rewardCurrencies = C_QuestInfoSystem.GetQuestRewardCurrencies(quest.questId)	
+					local rewardCurrencies = C_QuestInfoSystem.GetQuestRewardCurrencies(quest.questID)	
 					if rewardCurrencies then
 						quest.reward.currencies = {}
 						for i, currencyInfo in ipairs(rewardCurrencies) do
@@ -398,20 +398,20 @@ local RetrieveWorldQuests = function(mapId)
 							local texture = currencyInfo.texture
 							local numItems = currencyInfo.totalRewardAmount
 							local currencyId = currencyInfo.currencyID
-							--print(string.format("[BWQ] QuestID: %d", quest.questId))														-- Debugging
+							--print(string.format("[BWQ] QuestID: %d", quest.questID))														-- Debugging
 							--print(string.format("[BWQ] - currencyInfo: %d - %s - %d - %d - %d", i, name, texture, numItems, currencyId))	-- Debugging
 							if name then
 								hasReward = true
 								local currency = {}
 								if CONSTANTS.CURRENCIES_AFFECTED_BY_WARMODE[currencyId] then
-									currency.amount = BWQ:ValueWithWarModeBonus(quest.questId, numItems)
+									currency.amount = BWQ:ValueWithWarModeBonus(quest.questID, numItems)
 								else
 									currency.amount = numItems
 								end
 								currency.name = string.format("%d %s", currency.amount, name)
 								currency.texture = texture
 
-								--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s - %s - %s", quest.questId, quest.title, name, currencyId, currency.name, currency.texture, currency.amount))    -- for debugging
+								--print(string.format("[BWQ] Quest %s - %s - %s - %s - %s - %s - %s", quest.questID, quest.title, name, currencyId, currency.name, currency.texture, currency.amount))    -- for debugging
 
 								if currencyId == 1553 then -- azerite
 									currency.name = string.format("|cffe5cc80[%d %s]|r", currency.amount, name)
@@ -575,7 +575,7 @@ local RetrieveWorldQuests = function(mapId)
 					end
 					-- xp reward [Only show if XP is the only reward (i.e., if none of the above are rewards)]
 					if not hasReward then
-						local xp = GetQuestLogRewardXP(quest.questId)
+						local xp = GetQuestLogRewardXP(quest.questID)
 						if xp > 0 then
 							hasReward = true
 							quest.reward.xp = xp
@@ -585,13 +585,13 @@ local RetrieveWorldQuests = function(mapId)
 							if BWQ:C("showXP") then quest.hide = false end
 						end
 					end
-					if BWQcfg.spewDebugInfo and not hasReward and not HaveQuestData(quest.questId) then
-						print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questId, quest.title))
+					if BWQcfg.spewDebugInfo and not hasReward and not HaveQuestData(quest.questID) then
+						print(string.format("[BWQ] Quest with no reward found: ID %s (%s)", quest.questID, quest.title))
 					end
 					if not hasReward then BWQ.needsRefresh = true end -- in most cases no reward means api returned incomplete data
 					
 					for _, bounty in ipairs(BWQ.bounties) do
-						if C_QuestLog.IsQuestCriteriaForBounty(quest.questId, bounty.questID) then
+						if C_QuestLog.IsQuestCriteriaForBounty(quest.questID, bounty.questID) then
 							quest.bounties[#quest.bounties + 1] = bounty.icon
 						end
 					end
@@ -599,13 +599,13 @@ local RetrieveWorldQuests = function(mapId)
 
 					-- quest type filters
 					if quest.worldQuestType == Enum.QuestTagType.PetBattle then
-						if BWQ:C("showPetBattle") or (BWQ:C("alwaysShowPetBattleFamilyFamiliar") and CONSTANTS.FAMILY_FAMILIAR_QUEST_IDS[quest.questId] ~= nil) then
+						if BWQ:C("showPetBattle") or (BWQ:C("alwaysShowPetBattleFamilyFamiliar") and CONSTANTS.FAMILY_FAMILIAR_QUEST_IDS[quest.questID] ~= nil) then
 							quest.hide = false
 						else
 							quest.hide = true
 						end
 
-						quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[BWQ.expansion], quest.questId)
+						quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.PET_BATTLE_WQ[BWQ.expansion], quest.questID)
 					elseif quest.worldQuestType == Enum.QuestTagType.Profession then
 						if BWQ:C("showProfession") then
 
@@ -617,7 +617,7 @@ local RetrieveWorldQuests = function(mapId)
 								if BWQ:C("showProfessionMining") then quest.hide = false else quest.hide = true end
 							elseif quest.tagId == 130 then
 								questType[#questType+1] = CONSTANTS.QUEST_TYPES.FISHING
-								quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.LEGION_FISHING_WQ, quest.questId)
+								quest.isMissingAchievementCriteria = BWQ:IsQuestAchievementCriteriaMissing(CONSTANTS.ACHIEVEMENT_IDS.LEGION_FISHING_WQ, quest.questID)
 								if BWQ:C("showProfessionFishing") then quest.hide = false else quest.hide = true end
 							elseif quest.tagId == 124 then
 								questType[#questType+1] = CONSTANTS.QUEST_TYPES.SKINNING
@@ -697,7 +697,7 @@ local RetrieveWorldQuests = function(mapId)
 					-- don't filter epic quests based on setting
 					if BWQ:C("alwaysShowEpicQuests") and (quest.quality == 2 or quest.worldQuestType == Enum.QuestTagType.Raid) then quest.hide = false end
 
-					BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+					BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questID] = quest
 
 					if not quest.hide then
 						numQuests = numQuests + 1
@@ -802,7 +802,7 @@ local RetrieveWorldQuests = function(mapId)
 							print("-------")
 							print("[BWQ] Quest Hidden!")
 							print("[BWQ] -- Title: "..tostring(quest.title))
-							print("[BWQ] -- ID: "..tostring(quest.questId))
+							print("[BWQ] -- ID: "..tostring(quest.questID))
 							print("[BWQ] -- tagName: "..tostring(quest.tagName))
 							print("[BWQ] -- tagId: "..tostring(quest.tagId))
 							print("[BWQ] -- worldQuestType: "..tostring(quest.worldQuestType))
@@ -835,13 +835,13 @@ local RetrieveWorldQuests = function(mapId)
         for i, poiID in ipairs(areaPoiIDs) do
             local poi = C_AreaPoiInfo.GetAreaPOIInfo(mapId,poiID)
             if poi and string.find(poi.name, "Special Assignment") then		-- TODO:  Are there other "names" that should be showing other than "Special Assignment" quests?
-				local questId = poi.areaPoiID
-				table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questId)
-				local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] or {}
+				local questID = poi.areaPoiID
+				table.insert(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, questID)
+				local quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questID] or {}
 				quest.title = poi.name
 				quest.LockedWQ = true
 				if not quest.timeAdded then
-					quest.wasSaved = BWQ.questIds[questId] ~= nil
+					quest.wasSaved = BWQ.questIds[questID] ~= nil
 				end
 				quest.timeAdded = quest.timeAdded or currentTime
 				if quest.wasSaved or currentTime - quest.timeAdded > 900 then
@@ -851,7 +851,7 @@ local RetrieveWorldQuests = function(mapId)
 				end
 				quest.hide = false											-- TODO:  Add option to hide locked world quests ...always showing them for now.
 				quest.sort = 0
-				quest.questId = questId
+				quest.questID = questID
 				quest.numObjectives = 0										-- Not used
 				quest.xFlight = poi.position.x
 				quest.yFlight = poi.position.x
@@ -919,7 +919,7 @@ local RetrieveWorldQuests = function(mapId)
 					end
 				end
 
-				BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId] = quest
+				BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questID] = quest
 				numQuests = numQuests + 1
 			end
 		end
@@ -967,8 +967,8 @@ function BWQ:UpdateQuestData()
 	if BWQ.numQuestsTotal ~= 0 then
 		BWQ.questIds = {}
 		for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
-			for _, questId in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
-				BWQ.questIds[questId] = true
+			for _, questID in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
+				BWQ.questIds[questID] = true
 			end
 		end
 		BWQcache.questIds = BWQ.questIds
@@ -1176,7 +1176,7 @@ function BWQ:UpdateBlock()
 		end
 
 		if not BWQ:C("collapsedZones")[mapId] then 
-			for _, questId in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
+			for _, questID in next, BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort do
 				local button = nil
 				if buttonIndex > #BWQ.MAP_ZONES[BWQ.expansion][mapId].buttons then
 					button = CreateFrame("Button", nil, BWQ)
@@ -1249,8 +1249,8 @@ function BWQ:UpdateBlock()
 				end
 
 				button.mapId = mapId
-				button.quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questId]
-				button.questID = button.quest.questId
+				button.quest = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[questID]
+				button.questID = button.quest.questID
 				button.worldQuest = true
 				button.numObjectives = button.quest.numObjectives
 
@@ -1412,7 +1412,7 @@ function BWQ:UpdateBlock()
 				--local titleWidth = button.titleFS:GetStringWidth()
 				--if titleWidth > titleMaxWidth then titleMaxWidth = titleWidth end
 
-				if C_QuestLog.GetQuestWatchType(button.quest.questId) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == button.quest.questId then
+				if C_QuestLog.GetQuestWatchType(button.quest.questID) == Enum.QuestWatchType.Manual or C_SuperTrack.GetSuperTrackedQuestID() == button.quest.questID then
 					button.track:Show()
 				else
 					button.track:Hide()
