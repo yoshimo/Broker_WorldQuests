@@ -1,3 +1,6 @@
+### 11.0.5.2
+* Added support for Bronze Celebration Token currency
+
 ### 11.0.5.1
 * Fixed error caused by recent World of Warcraft patch.
 

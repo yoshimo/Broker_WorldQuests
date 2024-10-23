@@ -559,7 +559,11 @@ local RetrieveWorldQuests = function(mapId)
 								elseif currencyId == 3004 then -- The Vizier
 									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_VIZIER
 									quest.reward.TheVizierAmount = currency.amount
-									if BWQ:C("showTheVizier") then quest.hide = false end																		
+									if BWQ:C("showTheVizier") then quest.hide = false end
+								elseif currencyId == 3100 then -- Bronze Celebration Token
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.BRONZE_CELEBRATION_TOKEN
+									quest.reward.BronzeCelebrationTokenAmount = currency.amount
+									if BWQ:C("showBronzeCelebrationToken") then quest.hide = false end
 								else 
 									if BWQcfg.spewDebugInfo then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
@@ -780,6 +784,8 @@ local RetrieveWorldQuests = function(mapId)
 									BWQ.totalTheGeneral = BWQ.totalTheGeneral + quest.reward.TheGeneralAmount
 								elseif rtype == CONSTANTS.REWARD_TYPES.THE_VIZIER then
 									BWQ.totalTheVizier = BWQ.totalTheVizier + quest.reward.TheVizierAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.BRONZE_CELEBRATION_TOKEN then
+									BWQ.totalBronzeCelebrationToken = BWQ.totalBronzeCelebrationToken + quest.reward.BronzeCelebrationTokenAmount
 								end
 							end
 						end
@@ -944,7 +950,7 @@ function BWQ:UpdateQuestData()
 	BWQ.totalDrakesAwakenedCrest, BWQ.totalWyrmsAwakenedCrest, BWQ.totalAspectsAwakenedCrest, BWQ.totalMysteriousFragment = 0, 0, 0, 0
 	BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej = 0, 0, 0, 0, 0
 	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
-	BWQ.totalXP = 0
+	BWQ.totalXP, BWQ.totalBronzeCelebrationToken = 0, 0
 
 	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
 		RetrieveWorldQuests(mapId)
@@ -1502,6 +1508,7 @@ function BWQ:UpdateBlock()
 
 	if BWQ:C("showTotalsInBrokerText") then
 		local brokerString = ""
+		if BWQ:C("brokerShowBronzeCelebrationToken") and BWQ.totalBronzeCelebrationToken > 0 then brokerString = string.format("%s|TInterface\\Icons\\Inv_10_dungeonjewelry_dragon_necklace_1_bronze:16:16|t %d  ", brokerString, BWQ.totalBronzeCelebrationToken) end
 		if BWQ:C("brokerShowPolishedPetCharms")    	and BWQ.totalPolishedPetCharms > 0  	then brokerString = string.format("%s|TInterface\\Icons\\inv_currency_petbattle:16:16|t %d  ", brokerString, BWQ.totalPolishedPetCharms) end
 		if BWQ:C("brokerShowAP")                  	and BWQ.totalArtifactPower > 0      	then brokerString = string.format("%s|TInterface\\Icons\\inv_smallazeriteshard:16:16|t %s  ", brokerString, BWQ:AbbreviateNumber(BWQ.totalArtifactPower)) end
 		if BWQ:C("brokerShowServiceMedals")       	and BWQ.totalServiceMedals > 0      	then brokerString = string.format("%s|T%s:16:16|t %s  ", brokerString, self.isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal", BWQ.totalServiceMedals) end

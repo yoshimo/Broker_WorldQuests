@@ -27,6 +27,7 @@ function BWQ:SetupConfigMenu()
 		{ text = "Only show world quests with |cff0070ddrare|r or above quality", check = "onlyShowRareOrAbove" },
 		{ text = "Don't filter quests for active bounties", check = "alwaysShowBountyQuests" },
 		{ text = "Show total counts in broker text", check = "showTotalsInBrokerText", submenu = {
+				{ text = ("|T%1$s:16:16|t  Bronze Celebration Token"):format("Interface\\Icons\\inv_10_dungeonjewelry_dragon_necklace_1_bronze"), check = "brokerShowBronzeCelebrationToken" },
 				{ text = ("|T%1$s:16:16|t  Polished Pet Charms"):format("Interface\\Icons\\inv_currency_petbattle"), check = "brokerShowPolishedPetCharms" },
 				{ text = ("|T%1$s:16:16|t  Artifact Power"):format("Interface\\Icons\\inv_smallazeriteshard"), check = "brokerShowAP" },
 				{ text = ("|T%1$s:16:16|t  Service Medals"):format(self.isHorde and "Interface\\Icons\\ui_horde_honorboundmedal" or "Interface\\Icons\\ui_alliance_7legionmedal"), check = "brokerShowServiceMedals" },
@@ -79,6 +80,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Gear"):format("Interface\\Icons\\Inv_chest_plate_legionendgame_c_01"), check = "showGear" },
 				{ text = ("|T%s$s:16:16|t  Crafting Materials"):format("1417744"), check = "showCraftingMaterials" },
 				{ text = ("|T%1$s:16:16|t  Mark Of Honor"):format("Interface\\Icons\\ability_pvp_gladiatormedallion"), check = "showMarkOfHonor" },
+				{ text = ("|T%1$s:16:16|t  Bronze Celebration Token"):format("Interface\\Icons\\inv_10_dungeonjewelry_dragon_necklace_1_bronze"), check = "showBronzeCelebrationToken" },
 				{ text = "Other", check = "showOtherItems" },
 			}
 		},
@@ -95,9 +97,9 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Valorstones"):format("Interface\\Icons\\inv_valorstone_base"), check = "showValorstones" },
 				{ text = ("|T%1$s:16:16|t  Kej"):format("Interface\\Icons\\inv_10_tailoring_silkrare_color3"), check = "showKej" },
 				{ text = ("|T%1$s:16:16|t  Council of Dornogal"):format("Interface\\Icons\\ui_majorfactions_storm"), check = "showCouncilofDornogal" },
-				{ text = ("|T%1$s:16:16|t  The Weaver"):format("Interface\\Icons\\ui_notoriety_theweaver"), check = "ShowTheWeaver" },
-				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "ShowTheGeneral" },
-				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "ShowTheVizier" },
+				{ text = ("|T%1$s:16:16|t  The Weaver"):format("Interface\\Icons\\ui_notoriety_theweaver"), check = "showTheWeaver" },
+				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "showTheGeneral" },
+				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "showTheVizier" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {
@@ -387,7 +389,8 @@ BWQ.defaultConfig = {
 		brokerShowTheGeneral = true,
 		brokerShowTheVizier = true,
 		brokerShowBloodyTokens = true,
-		brokerShowPolishedPetCharms = false,
+		brokerShowPolishedPetCharms = true,
+		brokerShowBronzeCelebrationToken = true,
 	sortByTimeRemaining = false,
 	showNEWTextWhenAppropriate = true,
 	-- reward type
@@ -411,6 +414,7 @@ BWQ.defaultConfig = {
 	showTheGeneral = true,
 	showTheVizier = true,
 	showValorstones = true,
+	showBronzeCelebrationToken = true,
 	showKej = true,
 	showBloodyTokens = true,
 	showArtifactPower = true,
