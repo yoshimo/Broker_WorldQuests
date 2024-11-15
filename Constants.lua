@@ -114,6 +114,7 @@ CONSTANTS.WORLD_QUEST_ICONS_BY_TAG_ID = {
 	[137] = { icon = "worldquest-icon-dungeon" },
 	[139] = { icon = "worldquest-icon-burninglegion" },
 	[142] = { icon = "worldquest-icon-burninglegion" },
+	[144] = { icon = "worldquest-icon-boss", border = "worldquest-questmarker-dragon-silver"  },
 	[145] = { icon = "worldquest-icon-dungeon" },
 	[151] = { icon = "N/A" },
 	[152] = { icon = "N/A" },
