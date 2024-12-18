@@ -901,8 +901,15 @@ local RetrieveWorldQuests = function(mapId)
 										quest.timeLeftString = timeLeftStr
 									elseif string.find(widgetInfo.text, "Complete") then
 										local quests, zone = string.match(widgetInfo.text, "Complete (%d+) |4world quest:world quests; in ?(.-) to unlock")
-										if string.find(zone,"the") then
-											zone = string.match(zone, "^the%s*(.+)")    -- remove the word "the" if it's the first word in the string and lowercase.
+										if zone then
+											-- TODO:  Why am I parsing the zone name rather than just using C_Map.GetMapInfo(mapId).name or "UNKNOWN" ??
+											if string.find(zone,"the") then
+												zone = string.match(zone, "^the%s*(.+)")    -- remove the word "the" if it's the first word in the string and lowercase.
+											end
+										else
+											quest.LockedWQ_QuestToComplete = string.match(widgetInfo.text, "Complete ?(.-) to unlock")
+											--print(string.format("[BWQ]: %s", quest.LockedWQ_QuestToComplete))
+											zone = C_Map.GetMapInfo(mapId).name or "UNKNOWN"
 										end
 										quest.LockedWQ_questsRemaining = quests and tonumber(quests) or 0
 										quest.LockedWQ_zone = zone or ""
@@ -931,9 +938,27 @@ local RetrieveWorldQuests = function(mapId)
 		end
 
 		if BWQ:C("sortByTimeRemaining") then
-			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a].timeLeft < BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b].timeLeft end)
+			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b)
+				local questA = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a]
+				local questB = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b]
+				
+				-- If either quest is nil, put it at the end
+				if not questA or not questA.timeLeft then return false end
+				if not questB or not questB.timeLeft then return true end
+				
+				return questA.timeLeft < questB.timeLeft
+			end)
 		else -- reward type
-			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b) return BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a].sort > BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b].sort end)
+			table.sort(BWQ.MAP_ZONES[BWQ.expansion][mapId].questsSort, function(a, b)
+				local questA = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[a]
+				local questB = BWQ.MAP_ZONES[BWQ.expansion][mapId].quests[b]
+				
+				-- If either quest is nil, put it at the end
+				if not questA or not questA.sort then return false end
+				if not questB or not questB.sort then return true end
+				
+				return questA.sort > questB.sort
+			end)
 		end
 
 		BWQ.MAP_ZONES[BWQ.expansion][mapId].numQuests = numQuests
@@ -1264,12 +1289,20 @@ function BWQ:UpdateBlock()
 				local rewardText = ""
 				if button.quest.LockedWQ then
 					-- To find Atlas textures such as the "padlock" below.  Use the /tav command (Texture Atlas Viewer addon).
-					rewardText = string.format(
-						"|cnWARNING_FONT_COLOR:|A:%s:14:14|a Complete %d more %s in %s|r",
-						"Garr_LockedBuilding",
-						button.quest.LockedWQ_questsRemaining and button.quest.LockedWQ_questsRemaining or "",
-						button.quest.LockedWQ_questsRemaining > 1 and "WQs" or "WQ",
-						button.quest.LockedWQ_zone and button.quest.LockedWQ_zone or "")
+					if button.quest.LockedWQ_QuestToComplete then
+						rewardText = string.format(
+							"|cnWARNING_FONT_COLOR:|A:%s:14:14|a Complete the quest '%s' in %s|r",
+							"Garr_LockedBuilding",
+							button.quest.LockedWQ_QuestToComplete,
+							button.quest.LockedWQ_zone and button.quest.LockedWQ_zone or "")
+					else
+						rewardText = string.format(
+							"|cnWARNING_FONT_COLOR:|A:%s:14:14|a Complete %d more %s in %s|r",
+							"Garr_LockedBuilding",
+							button.quest.LockedWQ_questsRemaining and button.quest.LockedWQ_questsRemaining or "",
+							button.quest.LockedWQ_questsRemaining > 1 and "WQs" or "WQ",
+							button.quest.LockedWQ_zone and button.quest.LockedWQ_zone or "")
+					end
 					button.reward:SetScript("OnEvent", function(self, event)
 						if event == "MODIFIER_STATE_CHANGED" then
 							if button.reward:IsMouseOver() and button.reward:IsShown() then

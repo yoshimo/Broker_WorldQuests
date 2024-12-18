@@ -1,3 +1,7 @@
+### 11.0.7.0
+* Added support for Siren Isle (TWW)
+* Added icon for world quests that involve Legion world bosses (quest TagID 144)
+
 ### 11.0.5.2
 * Added support for Bronze Celebration Token currency
 

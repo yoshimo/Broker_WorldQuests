@@ -17,7 +17,8 @@ end
 
 function BWQ:FormatTimeLeftString(minutes)
 	local timeLeftStr = ""
-	if minutes <= 0 then return "" end
+
+	if not minutes or minutes <= 0 then return "" end
 
 	local days = math.floor(minutes / 1440)
 	local hours = math.floor((minutes % 1440) / 60)
