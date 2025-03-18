@@ -1,3 +1,6 @@
+### 11.1.0.0
+* Added support for Undermine (TWW)
+
 ### 11.0.7.0
 * Added support for Siren Isle (TWW)
 * Added icon for world quests that involve Legion world bosses (quest TagID 144)
