@@ -1,3 +1,6 @@
+### 11.1.0.1
+* Added support for Weathered Undermine Crest currency
+
 ### 11.1.0.0
 * Added support for Undermine (TWW)
 

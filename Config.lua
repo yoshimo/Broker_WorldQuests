@@ -70,6 +70,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  The Weaver"):format("Interface\\Icons\\ui_notoriety_theweaver"), check = "brokerShowTheWeaver" },
 				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "brokerShowTheGeneral" },
 				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "brokerShowTheVizier" },
+				{ text = ("|T%1$s:16:16|t  Weathered Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_weathered"), check = "brokerShowWeatheredUndermineCrest" },
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
@@ -100,6 +101,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  The Weaver"):format("Interface\\Icons\\ui_notoriety_theweaver"), check = "showTheWeaver" },
 				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "showTheGeneral" },
 				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "showTheVizier" },
+				{ text = ("|T%1$s:16:16|t  Weathered Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_weathered"), check = "showWeatheredUndermineCrest" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {
@@ -391,6 +393,7 @@ BWQ.defaultConfig = {
 		brokerShowBloodyTokens = true,
 		brokerShowPolishedPetCharms = true,
 		brokerShowBronzeCelebrationToken = true,
+		brokerShowWeatheredUndermineCrest = true,
 	sortByTimeRemaining = false,
 	showNEWTextWhenAppropriate = true,
 	-- reward type
@@ -413,6 +416,7 @@ BWQ.defaultConfig = {
 	showTheWeaver = true,
 	showTheGeneral = true,
 	showTheVizier = true,
+	showWeatheredUndermineCrest = true,
 	showValorstones = true,
 	showBronzeCelebrationToken = true,
 	showKej = true,
