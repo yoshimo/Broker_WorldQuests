@@ -71,6 +71,8 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "brokerShowTheGeneral" },
 				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "brokerShowTheVizier" },
 				{ text = ("|T%1$s:16:16|t  Weathered Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_weathered"), check = "brokerShowWeatheredUndermineCrest" },
+				{ text = ("|T%1$s:16:16|t  Carved Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_carved"), check = "brokerShowCarvedUndermineCrest" },
+				{ text = ("|T%1$s:16:16|t  The Cartels of Undermine"):format("Interface\\Icons\\ui_majorfactions_rocket"), check = "brokerShowTheCartelsOfUndermine" },
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
@@ -102,6 +104,8 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  The General"):format("Interface\\Icons\\ui_notoriety_thegeneral"), check = "showTheGeneral" },
 				{ text = ("|T%1$s:16:16|t  The Vizier"):format("Interface\\Icons\\ui_notoriety_thevizier"), check = "showTheVizier" },
 				{ text = ("|T%1$s:16:16|t  Weathered Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_weathered"), check = "showWeatheredUndermineCrest" },
+				{ text = ("|T%1$s:16:16|t  Carved Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_carved"), check = "showCarvedUndermineCrest" },
+				{ text = ("|T%1$s:16:16|t  The Cartels of Undermine"):format("Interface\\Icons\\ui_majorfactions_rocket"), check = "showTheCartelsOfUndermine" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {
@@ -394,6 +398,8 @@ BWQ.defaultConfig = {
 		brokerShowPolishedPetCharms = true,
 		brokerShowBronzeCelebrationToken = true,
 		brokerShowWeatheredUndermineCrest = true,
+		brokerShowCarvedUndermineCrest = true,
+		brokerShowTheCartelsOfUndermine = true,
 	sortByTimeRemaining = false,
 	showNEWTextWhenAppropriate = true,
 	-- reward type
@@ -417,6 +423,8 @@ BWQ.defaultConfig = {
 	showTheGeneral = true,
 	showTheVizier = true,
 	showWeatheredUndermineCrest = true,
+	showCarvedUndermineCrest = true,
+	showTheCartelsOfUndermine = true,
 	showValorstones = true,
 	showBronzeCelebrationToken = true,
 	showKej = true,

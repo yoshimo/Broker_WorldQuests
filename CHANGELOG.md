@@ -1,5 +1,7 @@
 ### 11.1.0.1
 * Added support for Weathered Undermine Crest currency
+* Added support for Carved Undermine Crest currency
+* Added support for The Cartels of Undermine reputation currency
 
 ### 11.1.0.0
 * Added support for Undermine (TWW)
