@@ -576,6 +576,22 @@ local RetrieveWorldQuests = function(mapId)
 									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_CARTELS_OF_UNDERMINE
 									quest.reward.TheCartelsOfUndermineAmount = currency.amount
 									if BWQ:C("showTheCartelsOfUndermine") then quest.hide = false end
+								elseif currencyId == 3169 then -- The Bilgewater Cartel
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_BILGEWATER_CARTEL
+									quest.reward.TheBilgewaterCartelAmount = currency.amount
+									if BWQ:C("showTheBilgewaterCartel") then quest.hide = false end
+								elseif currencyId == 3171 then -- The Blackwater Cartel
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_BLACKWATER_CARTEL
+									quest.reward.TheBlackwaterCartelAmount = currency.amount
+									if BWQ:C("showTheBlackwaterCartel") then quest.hide = false end
+								elseif currencyId == 3173 then -- The Steamwheedle Cartel
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_STEAMWHEEDLE_CARTEL
+									quest.reward.TheSteamwheedleCartelAmount = currency.amount
+									if BWQ:C("showTheSteamwheedleCartel") then quest.hide = false end
+								elseif currencyId == 3175 then -- The Venture Company
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_VENTURE_COMPANY
+									quest.reward.TheVentureCompanyAmount = currency.amount
+									if BWQ:C("showTheVentureCompany") then quest.hide = false end									
 								else 
 									if BWQcfg.spewDebugInfo then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
@@ -803,7 +819,16 @@ local RetrieveWorldQuests = function(mapId)
 								elseif rtype == CONSTANTS.REWARD_TYPES.CARVED_UNDERMINE_CREST then
 									BWQ.totalCarvedUndermineCrest = BWQ.totalCarvedUndermineCrest + quest.reward.CarvedUndermineCrestAmount
 								elseif rtype == CONSTANTS.REWARD_TYPES.THE_CARTELS_OF_UNDERMINE then
-									BWQ.totalTheCartelsOfUndermine = BWQ.totalTheCartelsOfUndermine + quest.reward.TheCartelsOfUndermineAmount	
+									BWQ.totalTheCartelsOfUndermine = BWQ.totalTheCartelsOfUndermine + quest.reward.TheCartelsOfUndermineAmount
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_BILGEWATER_CARTEL then
+									BWQ.totalTheBilgewaterCartel = BWQ.totalTheBilgewaterCartel + quest.reward.TheBilgewaterCartelAmount	
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_BLACKWATER_CARTEL then
+									BWQ.totalTheBlackwaterCartel = BWQ.totalTheBlackwaterCartel + quest.reward.TheBlackwaterCartelAmount	
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_STEAMWHEEDLE_CARTEL then
+									BWQ.totalTheSteamwheedleCartel = BWQ.totalTheSteamwheedleCartel + quest.reward.TheSteamwheedleCartelAmount	
+								elseif rtype == CONSTANTS.REWARD_TYPES.THE_VENTURE_COMPANY then
+									BWQ.totalTheVentureCompany = BWQ.totalTheVentureCompany + quest.reward.TheVentureCompanyAmount										
+
 								end
 							end
 						end
@@ -994,6 +1019,7 @@ function BWQ:UpdateQuestData()
 	BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej = 0, 0, 0, 0, 0
 	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
 	BWQ.totalXP, BWQ.totalBronzeCelebrationToken, BWQ.totalWeatheredUndermineCrest, BWQ.totalCarvedUndermineCrest, BWQ.totalTheCartelsOfUndermine = 0, 0, 0, 0, 0
+	BWQ.totalTheBilgewaterCartel, BWQ.totalTheBlackwaterCartel, BWQ.totalTheSteamwheedleCartel, BWQ.totalTheVentureCompany = 0, 0, 0, 0
 
 	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
 		RetrieveWorldQuests(mapId)
@@ -1605,6 +1631,10 @@ function BWQ:UpdateBlock()
 		if BWQ:C("brokerShowWeatheredUndermineCrest") and BWQ.totalWeatheredUndermineCrest > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_crestupgrade_undermine_weathered:16:16|t %d  ", brokerString, BWQ.totalWeatheredUndermineCrest) end
 		if BWQ:C("brokerShowCarvedUndermineCrest") 	and BWQ.totalCarvedUndermineCrest > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_crestupgrade_undermine_carved:16:16|t %d  ", brokerString, BWQ.totalCarvedUndermineCrest) end
 		if BWQ:C("brokerShowTheCartelsOfUndermine") and BWQ.totalTheCartelsOfUndermine > 0	then brokerString = string.format("%s|TInterface\\Icons\\ui_majorfactions_rocket:16:16|t %d  ", brokerString, BWQ.totalTheCartelsOfUndermine) end
+		if BWQ:C("brokerShowTheBilgewaterCartel") 	and BWQ.totalTheBilgewaterCartel > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_bilgewater:16:16|t %d  ", brokerString, BWQ.totalTheBilgewaterCartel) end
+		if BWQ:C("brokerShowTheBlackwaterCartel") 	and BWQ.totalTheBlackwaterCartel > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_blackwater:16:16|t %d  ", brokerString, BWQ.totalTheBlackwaterCartel) end
+		if BWQ:C("brokerShowTheSteamwheedleCartel") and BWQ.totalTheSteamwheedleCartel > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_steamwheedle:16:16|t %d  ", brokerString, BWQ.totalTheSteamwheedleCartel) end
+		if BWQ:C("brokerShowTheVentureCompany") 	and BWQ.totalTheVentureCompany > 0		then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_ventureco:16:16|t %d  ", brokerString, BWQ.totalTheVentureCompany) end
 
 		if brokerString and brokerString ~= "" then
 			BWQ.WorldQuestsBroker.text = brokerString

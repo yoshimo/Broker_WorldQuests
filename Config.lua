@@ -73,6 +73,10 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Weathered Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_weathered"), check = "brokerShowWeatheredUndermineCrest" },
 				{ text = ("|T%1$s:16:16|t  Carved Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_carved"), check = "brokerShowCarvedUndermineCrest" },
 				{ text = ("|T%1$s:16:16|t  The Cartels of Undermine"):format("Interface\\Icons\\ui_majorfactions_rocket"), check = "brokerShowTheCartelsOfUndermine" },
+				{ text = ("|T%1$s:16:16|t  The Bilgewater Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_bilgewater"), check = "brokerShowTheBilgewaterCartel" },
+				{ text = ("|T%1$s:16:16|t  The Blackwater Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_blackwater"), check = "brokerShowTheBlackwaterCartel" },
+				{ text = ("|T%1$s:16:16|t  The Steamwheedle Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_steamwheedle"), check = "brokerShowTheSteamwheedleCartel" },
+				{ text = ("|T%1$s:16:16|t  The Venture Company"):format("Interface\\Icons\\inv_1115_reputationcurrencies_ventureco"), check = "brokerShowTheVentureCompany" },
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
@@ -106,6 +110,10 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  Weathered Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_weathered"), check = "showWeatheredUndermineCrest" },
 				{ text = ("|T%1$s:16:16|t  Carved Undermine Crest"):format("Interface\\Icons\\inv_crestupgrade_undermine_carved"), check = "showCarvedUndermineCrest" },
 				{ text = ("|T%1$s:16:16|t  The Cartels of Undermine"):format("Interface\\Icons\\ui_majorfactions_rocket"), check = "showTheCartelsOfUndermine" },
+				{ text = ("|T%1$s:16:16|t  The Bilgewater Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_bilgewater"), check = "showTheBilgewaterCartel" },
+				{ text = ("|T%1$s:16:16|t  The Blackwater Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_blackwater"), check = "showTheBlackwaterCartel" },
+				{ text = ("|T%1$s:16:16|t  The Steamwheedle Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_steamwheedle"), check = "showTheSteamwheedleCartel" },
+				{ text = ("|T%1$s:16:16|t  The Venture Company"):format("Interface\\Icons\\inv_1115_reputationcurrencies_ventureco"), check = "showTheVentureCompany" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {
@@ -400,6 +408,10 @@ BWQ.defaultConfig = {
 		brokerShowWeatheredUndermineCrest = true,
 		brokerShowCarvedUndermineCrest = true,
 		brokerShowTheCartelsOfUndermine = true,
+		brokerShowTheBilgewaterCartel = true,
+		brokerShowTheBlackwaterCartel = true,
+		brokerShowTheSteamwheedleCartel = true,
+		brokerShowTheVentureCompany = true,
 	sortByTimeRemaining = false,
 	showNEWTextWhenAppropriate = true,
 	-- reward type
@@ -425,6 +437,10 @@ BWQ.defaultConfig = {
 	showWeatheredUndermineCrest = true,
 	showCarvedUndermineCrest = true,
 	showTheCartelsOfUndermine = true,
+	showTheBilgewaterCartel = true,
+	showTheBlackwaterCartel = true,
+	showTheSteamwheedleCartel = true,
+	showTheVentureCompany = true,
 	showValorstones = true,
 	showBronzeCelebrationToken = true,
 	showKej = true,

@@ -1,3 +1,9 @@
+### 11.1.0.2
+* Added support for The Bilgewater Cartel reputation currency
+* Added support for The Blackwater Cartel reputation currency
+* Added support for The Steamwheedle Cartel reputation currency
+* Added support for The Venture Company reputation currency
+
 ### 11.1.0.1
 * Added support for Weathered Undermine Crest currency
 * Added support for Carved Undermine Crest currency
