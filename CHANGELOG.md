@@ -1,3 +1,8 @@
+### 11.2.0.0
+* Added support for K'aresh (TWW)
+* Added support for Tazavesh (TWW)
+* Added support for Weathered Ethereal Crest currency
+
 ### 11.1.0.2
 * Added support for The Bilgewater Cartel reputation currency
 * Added support for The Blackwater Cartel reputation currency

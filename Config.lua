@@ -77,6 +77,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  The Blackwater Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_blackwater"), check = "brokerShowTheBlackwaterCartel" },
 				{ text = ("|T%1$s:16:16|t  The Steamwheedle Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_steamwheedle"), check = "brokerShowTheSteamwheedleCartel" },
 				{ text = ("|T%1$s:16:16|t  The Venture Company"):format("Interface\\Icons\\inv_1115_reputationcurrencies_ventureco"), check = "brokerShowTheVentureCompany" },
+				{ text = ("|T%1$s:16:16|t  Weathered Ethereal Crest"):format("Interface\\Icons\\inv_crestupgrade_ethereal_weathered"), check = "brokerShowWeatheredEtherealCrest" },
 			}
 		},
 		{ text = "Sort list by time remaining instead of reward type", check = "sortByTimeRemaining" },
@@ -114,6 +115,7 @@ function BWQ:SetupConfigMenu()
 				{ text = ("|T%1$s:16:16|t  The Blackwater Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_blackwater"), check = "showTheBlackwaterCartel" },
 				{ text = ("|T%1$s:16:16|t  The Steamwheedle Cartel"):format("Interface\\Icons\\inv_1115_reputationcurrencies_steamwheedle"), check = "showTheSteamwheedleCartel" },
 				{ text = ("|T%1$s:16:16|t  The Venture Company"):format("Interface\\Icons\\inv_1115_reputationcurrencies_ventureco"), check = "showTheVentureCompany" },
+				{ text = ("|T%1$s:16:16|t  Weathered Ethereal Crest"):format("Interface\\Icons\\inv_crestupgrade_ethereal_weathered"), check = "showWeatheredEtherealCrest" },
 			}
 		},
 		{ text = "      Dragonflight", submenu = {
@@ -412,6 +414,7 @@ BWQ.defaultConfig = {
 		brokerShowTheBlackwaterCartel = true,
 		brokerShowTheSteamwheedleCartel = true,
 		brokerShowTheVentureCompany = true,
+		brokerShowWeatheredEtherealCrest = true,
 	sortByTimeRemaining = false,
 	showNEWTextWhenAppropriate = true,
 	-- reward type
@@ -441,6 +444,7 @@ BWQ.defaultConfig = {
 	showTheBlackwaterCartel = true,
 	showTheSteamwheedleCartel = true,
 	showTheVentureCompany = true,
+	showWeatheredEtherealCrest = true,
 	showValorstones = true,
 	showBronzeCelebrationToken = true,
 	showKej = true,

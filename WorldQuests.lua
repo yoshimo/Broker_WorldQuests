@@ -591,7 +591,11 @@ local RetrieveWorldQuests = function(mapId)
 								elseif currencyId == 3175 then -- The Venture Company
 									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.THE_VENTURE_COMPANY
 									quest.reward.TheVentureCompanyAmount = currency.amount
-									if BWQ:C("showTheVentureCompany") then quest.hide = false end									
+									if BWQ:C("showTheVentureCompany") then quest.hide = false end		
+								elseif currencyId == 3284 then -- Weathered Ethereal Crest
+									rewardType[#rewardType+1] = CONSTANTS.REWARD_TYPES.WEATHERED_ETHEREAL_CREST
+									quest.reward.WeatheredEtherealCrestAmount = currency.amount
+									if BWQ:C("showWeatheredEtherealCrest") then quest.hide = false end								
 								else 
 									if BWQcfg.spewDebugInfo then print(string.format("[BWQ] Unhandled currency: ID %s", currencyId)) end
 								end
@@ -828,7 +832,8 @@ local RetrieveWorldQuests = function(mapId)
 									BWQ.totalTheSteamwheedleCartel = BWQ.totalTheSteamwheedleCartel + quest.reward.TheSteamwheedleCartelAmount	
 								elseif rtype == CONSTANTS.REWARD_TYPES.THE_VENTURE_COMPANY then
 									BWQ.totalTheVentureCompany = BWQ.totalTheVentureCompany + quest.reward.TheVentureCompanyAmount										
-
+								elseif rtype == CONSTANTS.REWARD_TYPES.WEATHERED_ETHEREAL_CREST then
+									BWQ.totalWeatheredEtherealCrest = BWQ.totalWeatheredEtherealCrest + quest.reward.WeatheredEtherealCrestAmount
 								end
 							end
 						end
@@ -1019,7 +1024,7 @@ function BWQ:UpdateQuestData()
 	BWQ.totalResonanceCrystals, BWQ.totalTheAssemblyOfTheDeeps, BWQ.totalHallowfallArathi, BWQ.totalValorstones, BWQ.totalKej = 0, 0, 0, 0, 0
 	BWQ.totalPolishedPetCharms, BWQ.totalCouncilofDornogal, BWQ.totalTheWeaver, BWQ.totalTheGeneral, BWQ.totalTheVizier = 0, 0, 0, 0, 0
 	BWQ.totalXP, BWQ.totalBronzeCelebrationToken, BWQ.totalWeatheredUndermineCrest, BWQ.totalCarvedUndermineCrest, BWQ.totalTheCartelsOfUndermine = 0, 0, 0, 0, 0
-	BWQ.totalTheBilgewaterCartel, BWQ.totalTheBlackwaterCartel, BWQ.totalTheSteamwheedleCartel, BWQ.totalTheVentureCompany = 0, 0, 0, 0
+	BWQ.totalTheBilgewaterCartel, BWQ.totalTheBlackwaterCartel, BWQ.totalTheSteamwheedleCartel, BWQ.totalTheVentureCompany, BWQ.totalWeatheredEtherealCrest = 0, 0, 0, 0, 0
 
 	for mapId in next, BWQ.MAP_ZONES[BWQ.expansion] do
 		RetrieveWorldQuests(mapId)
@@ -1635,6 +1640,7 @@ function BWQ:UpdateBlock()
 		if BWQ:C("brokerShowTheBlackwaterCartel") 	and BWQ.totalTheBlackwaterCartel > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_blackwater:16:16|t %d  ", brokerString, BWQ.totalTheBlackwaterCartel) end
 		if BWQ:C("brokerShowTheSteamwheedleCartel") and BWQ.totalTheSteamwheedleCartel > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_steamwheedle:16:16|t %d  ", brokerString, BWQ.totalTheSteamwheedleCartel) end
 		if BWQ:C("brokerShowTheVentureCompany") 	and BWQ.totalTheVentureCompany > 0		then brokerString = string.format("%s|TInterface\\Icons\\inv_1115_reputationcurrencies_ventureco:16:16|t %d  ", brokerString, BWQ.totalTheVentureCompany) end
+		if BWQ:C("brokerShowWeatheredEtherealCrest") and BWQ.totalWeatheredEtherealCrest > 0	then brokerString = string.format("%s|TInterface\\Icons\\inv_crestupgrade_ethereal_weathered:16:16|t %d  ", brokerString, BWQ.totalWeatheredEtherealCrest) end
 
 		if brokerString and brokerString ~= "" then
 			BWQ.WorldQuestsBroker.text = brokerString
